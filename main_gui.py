@@ -2,8 +2,8 @@ import sys
 import gps
 import folium
 import threading
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 from geopy.distance import geodesic
 
 class GolfRangeFinder(QWidget):
@@ -69,10 +69,10 @@ class GolfRangeFinder(QWidget):
                 self.distanceLabel.setText(f"Distance to Hole: {distance:.2f} m")
 
             map_obj.save("map.html")
-            self.mapView.setHtml(open("map.html").read())
+            self.mapView.setHtml(open("map.html").read(), baseUrl='')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = GolfRangeFinder()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
