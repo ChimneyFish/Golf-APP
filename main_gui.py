@@ -10,12 +10,15 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.initUI()
-        self.gps_thread = threading.Thread(target=self.get_gps_position, daemon=True)
-        self.gps_thread.start()
-
+        # Initialize attributes to prevent AttributeError
         self.player_location = None
         self.hole_location = None
+
+        self.initUI()
+
+        # Start GPS thread
+        self.gps_thread = threading.Thread(target=self.get_gps_position, daemon=True)
+        self.gps_thread.start()
 
     def initUI(self):
         self.setWindowTitle("Golf Range Finder")
@@ -34,6 +37,8 @@ class GolfRangeFinder(QWidget):
         layout.addWidget(self.distanceLabel)
 
         self.setLayout(layout)
+        
+        # Ensure map updates only if player_location is set
         self.update_map()
 
     def get_gps_position(self):
@@ -41,7 +46,7 @@ class GolfRangeFinder(QWidget):
         while True:
             try:
                 report = session.next()
-                if report['class'] == 'TPV':
+                if report['class'] == 'TPV' and hasattr(report, 'lat') and hasattr(report, 'lon'):
                     self.player_location = (report.lat, report.lon)
                     self.update_map()
             except KeyError:
@@ -57,6 +62,7 @@ class GolfRangeFinder(QWidget):
             QMessageBox.warning(self, "GPS Error", "Waiting for GPS signal...")
 
     def update_map(self):
+        # Ensure map updates only if player_location is available
         if self.player_location:
             lat, lon = self.player_location
             map_obj = folium.Map(location=[lat, lon], zoom_start=18)
