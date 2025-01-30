@@ -7,7 +7,7 @@ sudo apt update
 sudo apt install -y gpsd gpsd-clients python3-gps
 
 # Install Python dependencies
-pip3 install --user PyQt5 folium geopy requests pynmea2
+pip3 install --user PyQt6 folium geopy requests pynmea2 --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -67,4 +67,6 @@ EOF
 
 # Make GPS script executable
 sudo chmod +x /opt/gps.py
+
+sudo reboot
 
