@@ -10,7 +10,7 @@ sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt6 python3-
 
 # Install required Python libraries
 wget https://files.pythonhosted.org/packages/75/24/1f575eb17a8135e54b3c243ff87e2f4d6b2389942836021d0628ed837559/pynmea2-1.19.0-py3-none-any.whl
-pip3 install --user folium geopy requests pynmea2 --break-system-packages
+pip3 install --user folium geopy requests pynmea2-1.19.0-py3-none-any.whl --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -20,7 +20,7 @@ sudo systemctl start gpsd
 echo "Configuring Raspberry Pi settings..."
 
 # Modify /boot/config.txt
-sudo tee -a /boot/config.txt <<EOF
+sudo tee -a /boot/firmware/config.txt <<EOF
 dtparam=spi=on
 dtoverlay=pi3-disable-bt
 core_freq=250
