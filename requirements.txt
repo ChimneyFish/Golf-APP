@@ -1,0 +1,6 @@
+pynmea2 
+PyQt6 
+folium 
+geopy 
+requests 
+gps3-py

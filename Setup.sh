@@ -3,14 +3,14 @@
 echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
 
 # Update package list
-sudo apt update && sudo apt upgrade -y
+sudo apt update 
 
 # Install required system packages
-sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt6 python3-pyqt6.qtwebengine
+sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt6 python3-pyqt6.qtwebengine python3-folium python3-geopy python3-requests
 
 # Install required Python libraries
 wget https://files.pythonhosted.org/packages/75/24/1f575eb17a8135e54b3c243ff87e2f4d6b2389942836021d0628ed837559/pynmea2-1.19.0-py3-none-any.whl
-pip3 install --user folium geopy requests pynmea2-1.19.0-py3-none-any.whl --break-system-packages
+pip3 install --user pynmea2-1.19.0-py3-none-any.whl gpsd-py3 --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -29,8 +29,8 @@ force_turbo=1
 EOF
 
 # Backup and modify boot command line settings
-sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
-sudo tee /boot/cmdline.txt <<EOF
+sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline_backup.txt
+sudo tee /boot/firmware/cmdline.txt <<EOF
 dwc_otg.lpm_enable=0 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
 EOF
@@ -75,13 +75,15 @@ mkdir -p ~/.config/autostart
 tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/pi/Golf-APP/main_gui.py
+Exec=python3 /home/admin/Golf-APP/main_gui.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
 
+cd /home/admin/
+git clone https://github.com/ChimneyFish/Golf-APP.git
 # Reboot to apply changes
 echo "Setup complete. Rebooting now..."
 sudo reboot
