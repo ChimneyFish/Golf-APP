@@ -7,10 +7,11 @@ sudo apt update
 
 # Install required system packages
 sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt6 python3-pyqt6.qtwebengine python3-folium python3-geopy python3-requests
+sudo apt install qtbase5-dev -y
 
 # Install required Python libraries
 wget https://files.pythonhosted.org/packages/75/24/1f575eb17a8135e54b3c243ff87e2f4d6b2389942836021d0628ed837559/pynmea2-1.19.0-py3-none-any.whl
-pip3 install --user pynmea2-1.19.0-py3-none-any.whl gpsd-py3 --break-system-packages
+pip3 install --user pynmea2-1.19.0-py3-none-any.whl gpsd-py3 pyqt6 --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
