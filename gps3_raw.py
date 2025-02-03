@@ -1,7 +1,7 @@
 import serial
 import time
 
-port = "/dev/ttyACM0"
+port = "/dev/ttyAMA0"
 
 with serial.Serial(port, baudrate=9600, timeout=1) as ser:
     while True:

@@ -11,7 +11,7 @@ sudo apt install qtbase5-dev -y
 
 # Install required Python libraries
 wget https://files.pythonhosted.org/packages/75/24/1f575eb17a8135e54b3c243ff87e2f4d6b2389942836021d0628ed837559/pynmea2-1.19.0-py3-none-any.whl
-pip3 install --user pynmea2-1.19.0-py3-none-any.whl gpsd-py3 pyqt6 --break-system-packages
+pip3 install --user pynmea2-1.19.0-py3-none-any.whl gpsd-py3 pyqt6 json sys --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -83,8 +83,7 @@ X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
 
-cd /home/admin/
-git clone https://github.com/ChimneyFish/Golf-APP.git
+
 # Reboot to apply changes
 echo "Setup complete. Rebooting now..."
 sudo reboot

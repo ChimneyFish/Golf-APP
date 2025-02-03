@@ -2,7 +2,7 @@ import serial
 import time
 import pynmea2
 
-port = "/dev/ttyACM0"
+port = "/dev/ttyAMA0"
 
 while True:
     try:
