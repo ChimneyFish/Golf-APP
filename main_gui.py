@@ -1,13 +1,10 @@
 import sys
 import json
-import os
-import geopy.distance
 import gpsd
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, 
     QGridLayout, QSpinBox, QLineEdit, QFileDialog, QHBoxLayout
 )
-from PyQt6.QtCore import Qt
 
 
 class OnScreenKeyboard(QWidget):
@@ -136,30 +133,6 @@ class GolfRangeFinder(QWidget):
         
         layout.addLayout(btn_layout)
         
-        # GPS Functionality
-        self.drive_label = QLabel("Drive Distance: N/A")
-        layout.addWidget(self.drive_label)
-        
-        self.range_label = QLabel("Range to Pin: N/A")
-        layout.addWidget(self.range_label)
-        
-        self.set_drive_start_btn = QPushButton("Set Drive Start")
-        self.set_drive_start_btn.clicked.connect(self.set_drive_start)
-        layout.addWidget(self.set_drive_start_btn)
-        
-        self.set_drive_end_btn = QPushButton("Set Drive End")
-        self.set_drive_end_btn.clicked.connect(self.set_drive_end)
-        layout.addWidget(self.set_drive_end_btn)
-        
-        self.set_pin_btn = QPushButton("Set Pin Location")
-        self.set_pin_btn.clicked.connect(self.set_pin_location)
-        layout.addWidget(self.set_pin_btn)
-        
-        # Reset Button
-        reset_button = QPushButton("Reset Scores")
-        reset_button.clicked.connect(self.reset_scores)
-        layout.addWidget(reset_button)
-        
         self.setLayout(layout)
 
     def show_keyboard(self, event):
@@ -171,13 +144,6 @@ class GolfRangeFinder(QWidget):
         self.scores[player][hole] = value
         self.total_score_labels[player].setText(f"{self.golfer_names[player]}: {sum(self.scores[player])}")
     
-    def reset_scores(self):
-        for g in range(self.num_golfers):
-            for h in range(18):
-                self.scores[g][h] = 0
-                self.score_spinboxes[g][h].setValue(0)
-            self.total_score_labels[g].setText(f"{self.golfer_names[g]}: 0")
-
     def save_course(self):
         """Save the current course name and scores to a JSON file."""
         course_name = self.course_name_input.text().strip()
