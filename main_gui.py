@@ -1,12 +1,12 @@
 import sys
-import json
-import os
-import geopy.distance
+import json  # noqa: F401
+import os  # noqa: F401
+import geopy.distance  # noqa: F401
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QStackedWidget,
+    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QStackedWidget,  # noqa: F401
     QLineEdit, QDialog, QHBoxLayout
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt  # noqa: F401
 import gpsd
 
 data_file = "courses.json"
