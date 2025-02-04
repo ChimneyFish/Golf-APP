@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QStackedWidget,
     QLineEdit, QDialog
 )
-from PyQt6.QtCore import Qt  # noqa: F401
+from PyQt6.QtCore import Qt
 import gpsd
 
 data_file = "courses.json"
@@ -131,7 +131,7 @@ class GolfRangeFinder(QWidget):
         try:
             packet = gpsd.get_current()
             return (packet.lat, packet.lon)
-        except:  # noqa: E722
+        except:
             return None
     
     def mark_tee_shot(self):
