@@ -1,6 +1,7 @@
 import sys
 import json
 import gpsd
+import math
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, 
     QGridLayout, QSpinBox, QLineEdit, QFileDialog, QHBoxLayout
@@ -115,6 +116,25 @@ class GolfRangeFinder(QWidget):
         
         layout.addLayout(self.score_grid)
         
+        # GPS Controls
+        self.gps_status_label = QLabel("GPS: Waiting for signal...", self)
+        layout.addWidget(self.gps_status_label)
+
+        self.drive_button = QPushButton("Mark Drive Start")
+        self.drive_button.clicked.connect(self.mark_drive_start)
+        layout.addWidget(self.drive_button)
+
+        self.end_drive_button = QPushButton("Mark Drive End")
+        self.end_drive_button.clicked.connect(self.mark_drive_end)
+        layout.addWidget(self.end_drive_button)
+
+        self.pin_button = QPushButton("Mark Pin Location")
+        self.pin_button.clicked.connect(self.mark_pin_location)
+        layout.addWidget(self.pin_button)
+
+        self.distance_label = QLabel("Distance: N/A")
+        layout.addWidget(self.distance_label)
+        
         # Total Score Display
         self.total_score_labels = [QLabel(f"{self.golfer_names[g]}: 0") for g in range(self.num_golfers)]
         for label in self.total_score_labels:
@@ -174,6 +194,26 @@ class GolfRangeFinder(QWidget):
                 self.score_spinboxes[g][h].setValue(self.scores[g][h])
         
         print(f"Loaded course: {data['name']}")
+
+    def get_gps_location(self):
+        try:
+            packet = gpsd.get_current()
+            return packet.lat, packet.lon
+        except Exception:
+            return None
+
+    def mark_drive_start(self):
+        self.drive_start = self.get_gps_location()
+
+    def mark_drive_end(self):
+        self.drive_end = self.get_gps_location()
+        if self.drive_start and self.drive_end:
+            distance = math.dist(self.drive_start, self.drive_end) * 1000  # Convert to meters
+            self.distance_label.setText(f"Drive Distance: {distance:.2f} m")
+
+    def mark_pin_location(self):
+        self.pin_location = self.get_gps_location()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
