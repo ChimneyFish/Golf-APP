@@ -2,146 +2,119 @@ import sys
 import json
 import os
 import geopy.distance
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QLineEdit, QStackedWidget, QDialog)
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QStackedWidget,
+    QLineEdit, QDialog
+)
 from PyQt6.QtCore import Qt
 import gpsd
 
-gpsd.connect()
-
-COURSE_DATA_FILE = "course_data.json"
-
-def save_course_data(course_name, pin_locations):
-    data = {}  
-    if os.path.exists(COURSE_DATA_FILE):
-        with open(COURSE_DATA_FILE, "r") as file:
-            data = json.load(file)
-    data[course_name] = pin_locations
-    with open(COURSE_DATA_FILE, "w") as file:
-        json.dump(data, file)
-
-def load_course_data(course_name):
-    if os.path.exists(COURSE_DATA_FILE):
-        with open(COURSE_DATA_FILE, "r") as file:
-            data = json.load(file)
-        return data.get(course_name, [None] * 18)
-    return [None] * 18
+data_file = "courses.json"
 
 class OnScreenKeyboard(QDialog):
-    def __init__(self, target_input):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.target_input = target_input
-        layout = QVBoxLayout()
+        self.setGeometry(100, 100, 400, 200)
         self.input_field = QLineEdit(self)
-        layout.addWidget(self.input_field)
-        keys = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM", "SPACE"]
-        for row in keys:
-            row_layout = QVBoxLayout()
-            for key in row:
-                btn = QPushButton(" " if key == "SPACE" else key)
-                btn.clicked.connect(lambda checked, k=key: self.add_key(k))
-                row_layout.addWidget(btn)
-            layout.addLayout(row_layout)
-        self.setLayout(layout)
+        self.input_field.setGeometry(50, 20, 300, 40)
+        self.ok_button = QPushButton("OK", self)
+        self.ok_button.setGeometry(150, 150, 100, 40)
+        self.ok_button.clicked.connect(self.accept)
     
-    def add_key(self, key):
-        if key == "SPACE":
-            self.input_field.setText(self.input_field.text() + " ")
-        else:
-            self.input_field.setText(self.input_field.text() + key)
-    
-    def accept(self):
-        self.target_input.setText(self.input_field.text())
-        super().accept()
+    def get_text(self):
+        return self.input_field.text()
 
 class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
         self.setGeometry(0, 0, 800, 480)
-        self.setStyleSheet("background-color: #2E7D32; color: white; font-size: 18px;")
         
-        self.scores = [[0] * 9, [0] * 9]  # 18 holes split into two pages
-        self.current_page = 0  # 0 for Front 9, 1 for Back 9
-        self.pin_locations = [None] * 18
+        self.scores = [[0] * 9 for _ in range(4)]  # 4 players, 9 holes per page
+        self.current_page = 0
         self.players = ["Player 1", "Player 2", "Player 3", "Player 4"]
+        self.pin_locations = {}
+        self.tee_location = None
+        self.load_course_data()
         
+        gpsd.connect()
         self.initUI()
     
     def initUI(self):
+        self.layout = QVBoxLayout()
+        
+        self.title_label = QLabel("Golf Scorecard", self)
+        self.title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: green;")
+        self.layout.addWidget(self.title_label)
+        
+        self.stack = QStackedWidget()
+        self.pages = [self.create_score_page(i) for i in range(2)]
+        for page in self.pages:
+            self.stack.addWidget(page)
+        
+        self.layout.addWidget(self.stack)
+        
+        self.total_score_label = QLabel("Total Scores: 0", self)
+        self.layout.addWidget(self.total_score_label)
+        
+        self.page_switch_btn = QPushButton("Switch to Back 9", self)
+        self.page_switch_btn.clicked.connect(self.switch_page)
+        self.layout.addWidget(self.page_switch_btn)
+        
+        self.drive_distance_btn = QPushButton("Mark Tee Shot", self)
+        self.drive_distance_btn.clicked.connect(self.mark_tee_shot)
+        self.layout.addWidget(self.drive_distance_btn)
+        
+        self.calculate_distance_btn = QPushButton("Calculate Drive Distance", self)
+        self.calculate_distance_btn.clicked.connect(self.calculate_drive_distance)
+        self.layout.addWidget(self.calculate_distance_btn)
+        
+        self.setLayout(self.layout)
+    
+    def create_score_page(self, page_idx):
+        widget = QWidget()
         layout = QVBoxLayout()
         
-        self.course_name_input = QLineEdit(self)
-        self.course_name_input.setPlaceholderText("Enter Course Name")
-        self.course_name_input.mousePressEvent = self.show_keyboard
-        layout.addWidget(self.course_name_input)
+        grid = QGridLayout()
+        self.score_inputs = [[None] * 9 for _ in range(4)]
         
-        self.score_grid = QGridLayout()
-        self.score_spinboxes = [[None] * 9 for _ in range(4)]
+        for i in range(4):
+            player_label = QLabel(self.players[i])
+            player_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+            grid.addWidget(player_label, i, 0)
+            
+            for j in range(9):
+                spinbox = QSpinBox()
+                spinbox.setRange(0, 10)
+                spinbox.setValue(self.scores[i][j])
+                spinbox.valueChanged.connect(lambda value, row=i, col=j + (page_idx * 9): self.update_score(row, col, value))
+                self.score_inputs[i][j] = spinbox
+                grid.addWidget(spinbox, i, j + 1)
         
-        for i in range(9):
-            hole_label = QLabel(f"Hole {i + 1}")
-            self.score_grid.addWidget(hole_label, 0, i)
-            for p in range(4):
-                self.score_spinboxes[p][i] = QSpinBox()
-                self.score_spinboxes[p][i].setRange(0, 10)
-                self.score_grid.addWidget(self.score_spinboxes[p][i], p + 1, i)
-        
-        layout.addLayout(self.score_grid)
-        
-        self.total_score_label = QLabel("Total Score: 0")
-        layout.addWidget(self.total_score_label)
-        
-        self.drive_label = QLabel("Drive Distance: N/A")
-        layout.addWidget(self.drive_label)
-        
-        self.range_label = QLabel("Range to Pin: N/A")
-        layout.addWidget(self.range_label)
-        
-        self.set_drive_start_btn = QPushButton("Set Drive Start")
-        self.set_drive_start_btn.clicked.connect(self.set_drive_start)
-        layout.addWidget(self.set_drive_start_btn)
-        
-        self.set_drive_end_btn = QPushButton("Set Drive End")
-        self.set_drive_end_btn.clicked.connect(self.set_drive_end)
-        layout.addWidget(self.set_drive_end_btn)
-        
-        self.set_pin_btn = QPushButton("Set Pin Location")
-        self.set_pin_btn.clicked.connect(self.set_pin_location)
-        layout.addWidget(self.set_pin_btn)
-        
-        self.toggle_page_btn = QPushButton("Next 9 Holes")
-        self.toggle_page_btn.clicked.connect(self.toggle_page)
-        layout.addWidget(self.toggle_page_btn)
-        
-        self.save_course_btn = QPushButton("Save Course Data")
-        self.save_course_btn.clicked.connect(self.save_course)
-        layout.addWidget(self.save_course_btn)
-        
-        self.setLayout(layout)
+        layout.addLayout(grid)
+        widget.setLayout(layout)
+        return widget
     
-    def show_keyboard(self, event):
-        keyboard = OnScreenKeyboard(self.course_name_input)
-        keyboard.exec()
+    def update_score(self, player, hole, value):
+        self.scores[player][hole % 9] = value
+        total = sum(sum(player_scores) for player_scores in self.scores)
+        self.total_score_label.setText(f"Total Scores: {total}")
     
-    def set_drive_start(self):
-        self.drive_start = self.get_gps_location()
-        if self.drive_start:
-            self.drive_label.setText("Drive Start Recorded")
+    def switch_page(self):
+        self.current_page = 1 - self.current_page
+        self.stack.setCurrentIndex(self.current_page)
+        self.page_switch_btn.setText("Switch to Front 9" if self.current_page else "Switch to Back 9")
     
-    def set_drive_end(self):
-        self.drive_end = self.get_gps_location()
-        if self.drive_end and self.drive_start:
-            distance = geopy.distance.distance(self.drive_start, self.drive_end).meters
-            self.drive_label.setText(f"Drive Distance: {distance:.2f} m")
+    def load_course_data(self):
+        if os.path.exists(data_file):
+            with open(data_file, "r") as f:
+                self.pin_locations = json.load(f)
     
-    def set_pin_location(self):
-        location = self.get_gps_location()
-        if location:
-            hole = self.current_page * 9 + len([p for p in self.pin_locations if p is not None])
-            if hole < 18:
-                self.pin_locations[hole] = location
-                self.range_label.setText(f"Pin for Hole {hole + 1} Set")
+    def save_course_data(self, course_name):
+        self.pin_locations[course_name] = self.get_gps_location()
+        with open(data_file, "w") as f:
+            json.dump(self.pin_locations, f)
     
     def get_gps_location(self):
         try:
@@ -150,18 +123,24 @@ class GolfRangeFinder(QWidget):
         except:
             return None
     
-    def toggle_page(self):
-        self.current_page = 1 - self.current_page
-        self.toggle_page_btn.setText("Back to Front 9" if self.current_page == 1 else "Next 9 Holes")
+    def mark_tee_shot(self):
+        self.tee_location = self.get_gps_location()
+        if self.tee_location:
+            print(f"Tee shot marked at: {self.tee_location}")
     
-    def save_course(self):
-        course_name = self.course_name_input.text().strip()
-        if course_name:
-            save_course_data(course_name, self.pin_locations)
-            self.range_label.setText("Course Saved")
-        
+    def calculate_drive_distance(self):
+        if self.tee_location:
+            current_location = self.get_gps_location()
+            if current_location:
+                distance = geopy.distance.distance(self.tee_location, current_location).yards
+                print(f"Drive distance: {distance:.2f} yards")
+            else:
+                print("Could not get current location")
+        else:
+            print("Tee shot location not set")
+    
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GolfRangeFinder()
-    window.show()
+    window.showFullScreen()
     sys.exit(app.exec())
