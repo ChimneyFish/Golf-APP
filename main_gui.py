@@ -1,219 +1,159 @@
 import sys
-import json
+import geopy.distance
 import gpsd
-import math
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, 
-    QGridLayout, QSpinBox, QLineEdit, QFileDialog, QHBoxLayout
+    QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
 )
-
-
-class OnScreenKeyboard(QWidget):
-    """Custom on-screen keyboard for touch-based input."""
-    
-    def __init__(self, target_input):
-        super().__init__()
-        self.target_input = target_input
-        self.setWindowTitle("On-Screen Keyboard")
-        self.setGeometry(200, 200, 600, 300)
-        
-        layout = QVBoxLayout()
-        self.keys = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
-        
-        grid = QGridLayout()
-        for row, key_row in enumerate(self.keys):
-            for col, key in enumerate(key_row):
-                btn = QPushButton(key)
-                btn.setFixedSize(50, 50)
-                btn.clicked.connect(lambda _, k=key: self.add_character(k))
-                grid.addWidget(btn, row, col)
-        
-        space_btn = QPushButton("Space")
-        space_btn.setFixedSize(200, 50)
-        space_btn.clicked.connect(lambda: self.add_character(" "))
-
-        backspace_btn = QPushButton("Backspace")
-        backspace_btn.setFixedSize(100, 50)
-        backspace_btn.clicked.connect(self.remove_character)
-
-        enter_btn = QPushButton("Enter")
-        enter_btn.setFixedSize(100, 50)
-        enter_btn.clicked.connect(self.close)  # Close keyboard when done
-
-        control_layout = QGridLayout()
-        control_layout.addWidget(space_btn, 0, 0, 1, 2)
-        control_layout.addWidget(backspace_btn, 0, 2)
-        control_layout.addWidget(enter_btn, 0, 3)
-
-        layout.addLayout(grid)
-        layout.addLayout(control_layout)
-        self.setLayout(layout)
-
-    def add_character(self, char):
-        """Append a character to the input field."""
-        self.target_input.setText(self.target_input.text() + char)
-
-    def remove_character(self):
-        """Remove the last character from the input field."""
-        self.target_input.setText(self.target_input.text()[:-1])
-
+from PyQt6.QtGui import QFont, QPalette, QColor
+from PyQt6.QtCore import Qt
 
 class GolfRangeFinder(QWidget):
-    """Main Golf Range Finder & Multi-Golfer Scorekeeper."""
-    
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setGeometry(100, 100, 600, 700)
-        
-        self.num_golfers = 4
-        self.scores = [[0] * 18 for _ in range(self.num_golfers)]
-        self.golfer_names = [f"Golfer {i + 1}" for i in range(self.num_golfers)]
+        self.setWindowTitle("⛳ Golf Range Finder & Scorekeeper ⛳")
+        self.showFullScreen()  # Full-screen mode
+
+        self.scores = [[0] * 18 for _ in range(4)]
         self.drive_start = None
         self.drive_end = None
         self.pin_location = None
-        gpsd.connect()
-        
+
+        gpsd.connect()  # Connect to GPS
+
         self.initUI()
-    
+
     def initUI(self):
+        # Set color theme
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(QPalette.ColorRole.Window, QColor("#4CAF50"))  # Green background
+        self.setPalette(palette)
+
         layout = QVBoxLayout()
-        
-        self.title_label = QLabel("Golf Scorecard", self)
-        self.title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
-        layout.addWidget(self.title_label)
-        
-        # Course Name Input
-        self.course_name_input = QLineEdit(self)
-        self.course_name_input.setPlaceholderText("Enter Course Name")
-        self.course_name_input.setReadOnly(True)
-        self.course_name_input.setStyleSheet("font-size: 16px; padding: 5px;")
-        self.course_name_input.mousePressEvent = self.show_keyboard
-        layout.addWidget(self.course_name_input)
-        
+
+        # Title Label
+        self.title_label = QLabel("🏌️‍♂️ Golf Scorecard & GPS Tracker 🏌️‍♀️", self)
+        self.title_label.setFont(QFont("Comic Sans MS", 26, QFont.Weight.Bold))
+        self.title_label.setStyleSheet("color: white; text-align: center;")
+        layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
+
         # Score Grid
         self.score_grid = QGridLayout()
-        self.score_spinboxes = [[None] * 18 for _ in range(self.num_golfers)]
-        
-        # Golfer labels
-        for g in range(self.num_golfers):
-            golfer_label = QLabel(self.golfer_names[g])
-            self.score_grid.addWidget(golfer_label, 0, g + 1)
-        
-        # Score Inputs
-        for hole in range(18):
-            hole_label = QLabel(f"Hole {hole + 1}")
-            self.score_grid.addWidget(hole_label, hole + 1, 0)
-            
-            for g in range(self.num_golfers):
+        self.score_spinboxes = [[None] * 18 for _ in range(4)]
+
+        for player in range(4):
+            player_label = QLabel(f"Player {player + 1}")
+            player_label.setFont(QFont("Comic Sans MS", 16, QFont.Weight.Bold))
+            player_label.setStyleSheet("color: white; padding: 5px;")
+            self.score_grid.addWidget(player_label, player, 0)
+
+            for i in range(18):
                 score_spinbox = QSpinBox()
                 score_spinbox.setRange(0, 10)
-                score_spinbox.setValue(self.scores[g][hole])
-                score_spinbox.valueChanged.connect(lambda value, h=hole, player=g: self.update_score(player, h, value))
-                
-                self.score_spinboxes[g][hole] = score_spinbox
-                self.score_grid.addWidget(score_spinbox, hole + 1, g + 1)
-        
+                score_spinbox.setValue(self.scores[player][i])
+                score_spinbox.setFixedSize(60, 60)
+                score_spinbox.setStyleSheet("background-color: white; font-size: 18px;")
+                score_spinbox.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+
+                self.score_spinboxes[player][i] = score_spinbox
+                self.score_grid.addWidget(score_spinbox, player, i + 1)
+
         layout.addLayout(self.score_grid)
-        
-        # GPS Controls
-        self.gps_status_label = QLabel("GPS: Waiting for signal...", self)
-        layout.addWidget(self.gps_status_label)
 
-        self.drive_button = QPushButton("Mark Drive Start")
-        self.drive_button.clicked.connect(self.mark_drive_start)
-        layout.addWidget(self.drive_button)
-
-        self.end_drive_button = QPushButton("Mark Drive End")
-        self.end_drive_button.clicked.connect(self.mark_drive_end)
-        layout.addWidget(self.end_drive_button)
-
-        self.pin_button = QPushButton("Mark Pin Location")
-        self.pin_button.clicked.connect(self.mark_pin_location)
-        layout.addWidget(self.pin_button)
-
-        self.distance_label = QLabel("Distance: N/A")
-        layout.addWidget(self.distance_label)
-        
         # Total Score Display
-        self.total_score_labels = [QLabel(f"{self.golfer_names[g]}: 0") for g in range(self.num_golfers)]
-        for label in self.total_score_labels:
-            label.setStyleSheet("font-size: 14px; font-weight: bold;")
-            layout.addWidget(label)
-        
-        # Save and Load Buttons
-        btn_layout = QHBoxLayout()
-        self.save_button = QPushButton("Save Course")
-        self.save_button.clicked.connect(self.save_course)
-        btn_layout.addWidget(self.save_button)
-        
-        self.load_button = QPushButton("Load Course")
-        self.load_button.clicked.connect(self.load_course)
-        btn_layout.addWidget(self.load_button)
-        
-        layout.addLayout(btn_layout)
-        
-        self.setLayout(layout)
+        self.total_score_label = QLabel("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
+        self.total_score_label.setFont(QFont("Comic Sans MS", 20, QFont.Weight.Bold))
+        self.total_score_label.setStyleSheet("color: yellow; padding: 10px;")
+        layout.addWidget(self.total_score_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-    def show_keyboard(self, event):
-        """Show the on-screen keyboard when the user taps the course name input field."""
-        self.keyboard = OnScreenKeyboard(self.course_name_input)
-        self.keyboard.show()
+        # GPS Labels
+        self.drive_label = QLabel("🚗 Drive Distance: N/A")
+        self.range_label = QLabel("📍 Range to Pin: N/A")
+        for label in [self.drive_label, self.range_label]:
+            label.setFont(QFont("Comic Sans MS", 18))
+            label.setStyleSheet("color: white; padding: 5px;")
+            layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Buttons Styling
+        button_style = """
+            QPushButton {
+                background-color: #FFEB3B;
+                font-size: 20px;
+                padding: 15px;
+                border-radius: 15px;
+                border: 2px solid black;
+            }
+            QPushButton:hover {
+                background-color: #FBC02D;
+            }
+            QPushButton:pressed {
+                background-color: #F57F17;
+            }
+        """
+
+        # GPS Buttons
+        self.set_drive_start_btn = QPushButton("📍 Set Drive Start")
+        self.set_drive_start_btn.setStyleSheet(button_style)
+        self.set_drive_start_btn.clicked.connect(self.set_drive_start)
+        layout.addWidget(self.set_drive_start_btn)
+
+        self.set_drive_end_btn = QPushButton("🚗 Set Drive End")
+        self.set_drive_end_btn.setStyleSheet(button_style)
+        self.set_drive_end_btn.clicked.connect(self.set_drive_end)
+        layout.addWidget(self.set_drive_end_btn)
+
+        self.set_pin_btn = QPushButton("🏁 Set Pin Location")
+        self.set_pin_btn.setStyleSheet(button_style)
+        self.set_pin_btn.clicked.connect(self.set_pin_location)
+        layout.addWidget(self.set_pin_btn)
+
+        # Reset Button
+        reset_button = QPushButton("🔄 Reset Scores")
+        reset_button.setStyleSheet(button_style)
+        reset_button.clicked.connect(self.reset_scores)
+        layout.addWidget(reset_button)
+
+        self.setLayout(layout)
 
     def update_score(self, player, hole, value):
         self.scores[player][hole] = value
-        self.total_score_labels[player].setText(f"{self.golfer_names[player]}: {sum(self.scores[player])}")
-    
-    def save_course(self):
-        """Save the current course name and scores to a JSON file."""
-        course_name = self.course_name_input.text().strip()
-        if not course_name:
-            return
-        
-        data = {"name": course_name, "scores": self.scores}
-        filename = f"{course_name}.json"
-        
-        with open(filename, "w") as f:
-            json.dump(data, f)
-        print(f"Course saved as {filename}")
+        total_scores = [sum(self.scores[p]) for p in range(4)]
+        self.total_score_label.setText(
+            f"Total Scores: 🏌️‍♂️ P1: {total_scores[0]} | 🏌️‍♂️ P2: {total_scores[1]} | 🏌️‍♂️ P3: {total_scores[2]} | 🏌️‍♂️ P4: {total_scores[3]}"
+        )
 
-    def load_course(self):
-        """Load a saved course from a JSON file."""
-        filename, _ = QFileDialog.getOpenFileName(self, "Load Course", "", "JSON Files (*.json)")
-        if not filename:
-            return
-        
-        with open(filename, "r") as f:
-            data = json.load(f)
-        
-        self.course_name_input.setText(data["name"])
-        self.scores = data["scores"]
-        
-        for g in range(self.num_golfers):
-            for h in range(18):
-                self.score_spinboxes[g][h].setValue(self.scores[g][h])
-        
-        print(f"Loaded course: {data['name']}")
+    def reset_scores(self):
+        for player in range(4):
+            for i in range(18):
+                self.scores[player][i] = 0
+                self.score_spinboxes[player][i].setValue(0)
+        self.total_score_label.setText("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
 
     def get_gps_location(self):
         try:
             packet = gpsd.get_current()
-            return packet.lat, packet.lon
+            return (packet.lat, packet.lon)
         except Exception:
             return None
 
-    def mark_drive_start(self):
+    def set_drive_start(self):
         self.drive_start = self.get_gps_location()
+        if self.drive_start:
+            self.drive_label.setText("🚗 Drive Start Recorded")
 
-    def mark_drive_end(self):
+    def set_drive_end(self):
         self.drive_end = self.get_gps_location()
-        if self.drive_start and self.drive_end:
-            distance = math.dist(self.drive_start, self.drive_end) * 1000  # Convert to meters
-            self.distance_label.setText(f"Drive Distance: {distance:.2f} m")
+        if self.drive_end and self.drive_start:
+            distance = geopy.distance.distance(self.drive_start, self.drive_end).meters
+            self.drive_label.setText(f"🚗 Drive Distance: {distance:.2f} m")
 
-    def mark_pin_location(self):
+    def set_pin_location(self):
         self.pin_location = self.get_gps_location()
-
+        if self.pin_location:
+            self.range_label.setText("🏁 Pin Location Set")
+            if self.drive_end:
+                distance = geopy.distance.distance(self.drive_end, self.pin_location).meters
+                self.range_label.setText(f"📍 Range to Pin: {distance:.2f} m")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
