@@ -1,6 +1,5 @@
 import sys
 import json
-import os
 import geopy.distance
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox, QDialog, QLineEdit, QHBoxLayout,
@@ -8,8 +7,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont, QPalette, QColor
 from PyQt6.QtCore import Qt
 import gpsd
-
-data_file = "courses.json"
 
 
 class OnScreenKeyboard(QDialog):
@@ -55,6 +52,10 @@ class OnScreenKeyboard(QDialog):
 
     def get_text(self):
         return self.input_field.text()
+
+
+def jls_extract_def(jls_extract_var):
+    return jls_extract_var
 
 
 class GolfRangeFinder(QWidget):
@@ -139,6 +140,8 @@ class GolfRangeFinder(QWidget):
         keyboard = OnScreenKeyboard(self)
         if keyboard.exec():
             self.course_name_input.setText(keyboard.get_text())
+        else:
+            super().mousePressEvent(event)  # Ensure original behavior occurs
 
     def update_score(self, player, hole, value):
         self.scores[player][hole] = value
@@ -178,19 +181,21 @@ class GolfRangeFinder(QWidget):
         except Exception as e:
             print(f"Error calculating distance: {e}")
 
+    def course_data(self):
+         return {
+         "course_name": self.course_name_input.text().strip(),
+         "tee_location": self.tee_location,
+         "pin_locations": self.pin_locations,
+    }
+
     def save_course_data(self):
-        course_data = {
-            "course_name": self.course_name_input.text().strip(),
-            "players": self.players,
-            "tee_location": self.tee_location,
-            "pin_locations": self.pin_locations,
-        }
         try:
-            with open(data_file, "w") as f:
-                json.dump(course_data, f, indent=4)
+            with open("courses.json", "w") as f:
+                json.dump(self.course_data(), f, indent=4)  # Call the method using parentheses
             print("Course data saved successfully.")
         except Exception as e:
             print(f"Error saving course data: {e}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
