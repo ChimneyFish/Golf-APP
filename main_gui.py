@@ -110,21 +110,25 @@ class GolfRangeFinder(QWidget):
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Window, QColor("#4CAF50"))
         self.setPalette(palette)
-        
+
         layout = QVBoxLayout()
         self.title_label = QLabel("🏌 Golf Scorecard & GPS Tracker", self)
         self.title_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         self.title_label.setStyleSheet("color: white;")
         layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.course_name_input = QLineEdit(self)  # Add this line
+        layout.addWidget(self.course_name_input)
+
         self.score_grid = QGridLayout()
         self.score_spinboxes = [[None] * 18 for _ in range(4)]
-        
+
         for player in range(4):
             player_label = QLabel(f"P{player + 1}")
             player_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
             player_label.setStyleSheet("color: white;")
             self.score_grid.addWidget(player_label, player, 0)
-                
+
             for i in range(9):
                 score_spinbox = QSpinBox()
                 score_spinbox.setRange(0, 10)
@@ -132,36 +136,33 @@ class GolfRangeFinder(QWidget):
                 score_spinbox.setStyleSheet("background-color: white; font-size: 14px;")
                 score_spinbox.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
 
-                self.score_spinboxes[player][i] = score_spinbox
-                self.score_grid.addWidget(score_spinbox, player, i + 1)
-        
+        self.score_spinboxes[player][i] = score_spinbox
+        self.score_grid.addWidget(score_spinbox, player, i + 1)
+
         layout.addLayout(self.score_grid)
-        
+
         self.total_score_label = QLabel("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
         self.total_score_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         self.total_score_label.setStyleSheet("color: yellow;")
         layout.addWidget(self.total_score_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        
+
         self.next_button = QPushButton("Next 9 Holes")
         self.next_button.clicked.connect(self.switch_page)
         layout.addWidget(self.next_button)
-        
+
         self.save_button = QPushButton("💾 Save Course Data")
         self.save_button.clicked.connect(self.save_course_data)
         layout.addWidget(self.save_button)
-        
-        self.setLayout(layout)
-       
 
         self.drive_distance_btn = QPushButton("Mark Tee Shot", self)
         self.drive_distance_btn.clicked.connect(self.mark_tee_shot)
-        self.layout.addWidget(self.drive_distance_btn)
+        layout.addWidget(self.drive_distance_btn)
 
         self.calculate_distance_btn = QPushButton("Calculate Drive Distance", self)
         self.calculate_distance_btn.clicked.connect(self.calculate_drive_distance)
-        self.layout.addWidget(self.calculate_distance_btn)
+        layout.addWidget(self.calculate_distance_btn)
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)
         self.update_ui()
 
     def show_keyboard(self, event):
