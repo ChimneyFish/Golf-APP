@@ -2,17 +2,63 @@ import sys
 import geopy.distance
 import gpsd
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QPalette, QColor, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
+    QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QPalette, QColor, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
 )
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
+
+data_file = "courses.json"
+
+class OnScreenKeyboard(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Keyboard")
+        self.setGeometry(100, 100, 400, 300)
+        
+        layout = QVBoxLayout()
+        self.input_field = QLineEdit(self)
+        layout.addWidget(self.input_field)
+        
+        key_layout = QGridLayout()
+        keys = [
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+            'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+            'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+            'Z', 'X', 'C', 'V', 'B', 'N', 'M'
+        ]
+        row, col = 0, 0
+        for key in keys:
+            button = QPushButton(key)
+            button.clicked.connect(lambda checked, k=key: self.input_field.insert(k))
+            key_layout.addWidget(button, row, col)
+            col += 1
+            if col > 9:
+                col = 0
+                row += 1
+        
+        layout.addLayout(key_layout)
+        
+        action_layout = QHBoxLayout()
+        self.backspace_button = QPushButton("Backspace")
+        self.backspace_button.clicked.connect(lambda: self.input_field.backspace())
+        action_layout.addWidget(self.backspace_button)
+        
+        self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.accept)
+        action_layout.addWidget(self.ok_button)
+        
+        layout.addLayout(action_layout)
+        self.setLayout(layout)
+    
+    def get_text(self):
+        return self.input_field.text()
 
 class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("⛳ Golf Range Finder & Scorekeeper ⛳")
-        self.showFullScreen()  # Make the window fit the screen
-        
+        self.setFixedSize(800, 480)  #
+
         self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
         self.drive_start = None
         self.drive_end = None
