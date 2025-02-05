@@ -24,47 +24,15 @@ class OnScreenKeyboard(QDialog):
 
         key_layout = QGridLayout()
         keys = [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "0",
-            "Q",
-            "W",
-            "E",
-            "R",
-            "T",
-            "Y",
-            "U",
-            "I",
-            "O",
-            "P",
-            "A",
-            "S",
-            "D",
-            "F",
-            "G",
-            "H",
-            "J",
-            "K",
-            "L",
-            "Z",
-            "X",
-            "C",
-            "V",
-            "B",
-            "N",
-            "M",
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+            "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
+            "A", "S", "D", "F", "G", "H", "J", "K", "L",
+            "Z", "X", "C", "V", "B", "N", "M"
         ]
         row, col = 0, 0
         for key in keys:
             button = QPushButton(key)
-            button.clicked.connect(lambda checked, k=key: self.input_field.insert(k))
+            button.clicked.connect(lambda _, k=key: self.input_field.insert(k))
             key_layout.addWidget(button, row, col)
             col += 1
             if col > 9:
@@ -75,7 +43,7 @@ class OnScreenKeyboard(QDialog):
 
         action_layout = QHBoxLayout()
         self.backspace_button = QPushButton("Backspace")
-        self.backspace_button.clicked.connect(lambda: self.input_field.backspace())
+        self.backspace_button.clicked.connect(self.input_field.backspace)
         action_layout.addWidget(self.backspace_button)
 
         self.ok_button = QPushButton("OK")
@@ -117,7 +85,9 @@ class GolfRangeFinder(QWidget):
         self.title_label.setStyleSheet("color: white;")
         layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.course_name_input = QLineEdit(self)  # Add this line
+        self.course_name_input = QLineEdit(self)
+        self.course_name_input.setPlaceholderText("Enter Course Name")
+        self.course_name_input.mousePressEvent = self.show_keyboard  # Attach keyboard
         layout.addWidget(self.course_name_input)
 
         self.score_grid = QGridLayout()
@@ -136,8 +106,8 @@ class GolfRangeFinder(QWidget):
                 score_spinbox.setStyleSheet("background-color: white; font-size: 14px;")
                 score_spinbox.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
 
-        self.score_spinboxes[player][i] = score_spinbox
-        self.score_grid.addWidget(score_spinbox, player, i + 1)
+                self.score_spinboxes[player][i] = score_spinbox
+                self.score_grid.addWidget(score_spinbox, player, i + 1)
 
         layout.addLayout(self.score_grid)
 
@@ -169,18 +139,18 @@ class GolfRangeFinder(QWidget):
         keyboard = OnScreenKeyboard(self)
         if keyboard.exec():
             self.course_name_input.setText(keyboard.get_text())
-    
+
     def update_score(self, player, hole, value):
         self.scores[player][hole] = value
         total_scores = [sum(self.scores[p]) for p in range(4)]
         self.total_score_label.setText(
             f"Total: P1: {total_scores[0]} | P2: {total_scores[1]} | P3: {total_scores[2]} | P4: {total_scores[3]}"
         )
-    
+
     def switch_page(self):
         self.current_page = 1 - self.current_page  # Toggle between 0 and 1
         self.update_ui()
-    
+
     def update_ui(self):
         start_hole = 9 * self.current_page
         for player in range(4):
@@ -192,17 +162,6 @@ class GolfRangeFinder(QWidget):
         try:
             packet = gpsd.get_current()
             self.tee_location = (packet.lat, packet.lon)
-            print(f"Tee-off marked at: {self.tee_location}")
-        except Exception as e:
-            print(f"Error getting GPS data: {e}")
-
-    def mark_pin_location(self, hole_number):
-        try:
-            packet = gpsd.get_current()
-            self.pin_locations[hole_number] = (packet.lat, packet.lon)
-            print(
-                f"Pin location for hole {hole_number} marked at: {self.pin_locations[hole_number]}"
-            )
         except Exception as e:
             print(f"Error getting GPS data: {e}")
 
@@ -214,48 +173,24 @@ class GolfRangeFinder(QWidget):
         try:
             packet = gpsd.get_current()
             current_location = (packet.lat, packet.lon)
-            distance = geopy.distance.geodesic(
-                self.tee_location, current_location
-            ).yards
+            distance = geopy.distance.geodesic(self.tee_location, current_location).yards
             print(f"Drive Distance: {distance:.2f} yards")
         except Exception as e:
             print(f"Error calculating distance: {e}")
 
     def save_course_data(self):
-        course_name = self.course_name_input.text().strip()
-        if not course_name:
-            print("Course name is empty, not saving.")
-            return
-
         course_data = {
-            "course_name": course_name,
+            "course_name": self.course_name_input.text().strip(),
             "players": self.players,
             "tee_location": self.tee_location,
             "pin_locations": self.pin_locations,
         }
-
-        with open(data_file, "w") as f:
-            json.dump(course_data, f, indent=4)
-
-        print("Course data saved successfully.")
-
-    def load_course_data(self):
-        if not os.path.exists(data_file):
-            print("No saved course data found.")
-            return
-
-        with open(data_file, "r") as f:
-            course_data = json.load(f)
-
-        self.course_name_input.setText(course_data.get("course_name", ""))
-        self.players = course_data.get(
-            "players", ["Player 1", "Player 2", "Player 3", "Player 4"]
-        )
-        self.tee_location = course_data.get("tee_location", None)
-        self.pin_locations = course_data.get("pin_locations", {})
-
-        print("Course data loaded successfully.")
-
+        try:
+            with open(data_file, "w") as f:
+                json.dump(course_data, f, indent=4)
+            print("Course data saved successfully.")
+        except Exception as e:
+            print(f"Error saving course data: {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

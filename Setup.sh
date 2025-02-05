@@ -8,6 +8,7 @@ sudo apt update
 # Install required system packages
 sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt6 python3-pyqt6.qtwebengine python3-folium python3-geopy python3-requests
 sudo apt install qtbase5-dev -y
+sudo apt --fix-broken install -y
 
 # Install required Python libraries
 wget https://files.pythonhosted.org/packages/75/24/1f575eb17a8135e54b3c243ff87e2f4d6b2389942836021d0628ed837559/pynmea2-1.19.0-py3-none-any.whl
@@ -73,14 +74,14 @@ sudo chmod +x /opt/gps.py
 
 # Set up autostart for Golf Range Finder GUI
 mkdir -p ~/.config/autostart
-tee ~/.config/autostart/golf_range_finder.desktop <<EOF
+tee ~/.config/autostart/Golf-Caddy.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/admin/Golf-APP/main_gui.py
+Exec=python3 /home/$User/Golf-APP/main_gui.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
-Name=Golf Range Finder
+Name=Golf-Caddy
 EOF
 
 
