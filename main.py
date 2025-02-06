@@ -1,98 +1,208 @@
-import tkinter as tk
-from tkinter import Label, Button, ttk
-import gps
-import folium
-import webbrowser
-import sqlite3
-from math import radians, cos, sin, sqrt, atan2
-import threading
-import time
+import sys
+import geopy.distance
+import gpsd
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QPalette, QColor, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
+)
+from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
 
-# Database Setup
-DB_FILE = "golf_holes.db"
+data_file = "courses.json"
 
-def get_holes():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, name, lat, lon FROM holes")
-    holes = cursor.fetchall()
-    conn.close()
-    return holes
+class OnScreenKeyboard(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Keyboard")
+        self.setGeometry(100, 100, 400, 300)
+        
+        layout = QVBoxLayout()
+        self.input_field = QLineEdit(self)
+        layout.addWidget(self.input_field)
+        
+        key_layout = QGridLayout()
+        keys = [
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+            'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+            'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+            'Z', 'X', 'C', 'V', 'B', 'N', 'M'
+        ]
+        row, col = 0, 0
+        for key in keys:
+            button = QPushButton(key)
+            button.clicked.connect(lambda checked, k=key: self.input_field.insert(k))
+            key_layout.addWidget(button, row, col)
+            col += 1
+            if col > 9:
+                col = 0
+                row += 1
+        
+        layout.addLayout(key_layout)
+        
+        action_layout = QHBoxLayout()
+        self.backspace_button = QPushButton("Backspace")
+        self.backspace_button.clicked.connect(lambda: self.input_field.backspace())
+        action_layout.addWidget(self.backspace_button)
+        
+        self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.accept)
+        action_layout.addWidget(self.ok_button)
+        
+        layout.addLayout(action_layout)
+        self.setLayout(layout)
+    
+    def get_text(self):
+        return self.input_field.text()
 
-# Haversine Formula for Distance Calculation
-def haversine(lat1, lon1, lat2, lon2):
-    R = 6371.0  # Earth's radius in km
-    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c * 1000  # Convert to meters
+class GolfRangeFinder(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("⛳ Golf Range Finder & Scorekeeper ⛳")
+        self.setFixedSize(800, 480)  #
 
-# Get GPS Data
-def get_gps_data():
-    session = gps.gps(mode=gps.WATCH_ENABLE)
-    while True:
-        session.next()
-        if session.fix.mode >= 2:  # 2D Fix (Lat/Lon available)
-            return session.fix.latitude, session.fix.longitude
+        self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
+        self.drive_start = None
+        self.drive_end = None
+        self.pin_location = None
+        
+        gpsd.connect()  # Connect to GPS daemon
+        
+        self.initUI()
 
-# Generate Map and Update Distance
-def update_distance():
-    global selected_hole
-    lat, lon = get_gps_data()
+    def initUI(self):
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(QPalette.ColorRole.Window, QColor("#4CAF50"))  # Green background
+        self.setPalette(palette)
 
-    # Get selected hole details
-    hole_id = hole_var.get()
-    hole_lat, hole_lon = next((h[2], h[3]) for h in get_holes() if h[0] == hole_id)
+        layout = QVBoxLayout()
 
-    distance = haversine(lat, lon, hole_lat, hole_lon)
+        # Title Label
+        self.title_label = QLabel("🏌️‍♂️ Golf Scorecard & GPS Tracker 🏌️‍♀️", self)
+        self.title_label.setFont(QFont("Comic Sans MS", 26, QFont.Weight.Bold))
+        self.title_label.setStyleSheet("color: white; text-align: center;")
+        layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-    # Create a map centered on player's position
-    golf_map = folium.Map(location=[lat, lon], zoom_start=18, tiles="Stamen Terrain")
+        # Score Grid
+        self.score_grid = QGridLayout()
+        self.score_labels = []
+        self.score_spinboxes = [[None] * 18 for _ in range(4)]
 
-    # Add player marker
-    folium.Marker([lat, lon], tooltip="You", icon=folium.Icon(color="blue")).add_to(golf_map)
+        for player in range(4):
+            player_label = QLabel(f"Player {player + 1}")
+            player_label.setFont(QFont("Comic Sans MS", 16, QFont.Weight.Bold))
+            player_label.setStyleSheet("color: white; padding: 5px;")
+            self.score_grid.addWidget(player_label, player, 0)
 
-    # Add hole marker
-    folium.Marker([hole_lat, hole_lon], tooltip="Hole", icon=folium.Icon(color="red")).add_to(golf_map)
+            for i in range(18):
+                hole_label = QLabel(f"{i + 1}")
+                score_spinbox = QSpinBox()
+                score_spinbox.setRange(0, 10)
+                score_spinbox.setValue(self.scores[player][i])
+                score_spinbox.setFixedSize(50, 50)  # Make spinboxes easier to tap
+                score_spinbox.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+                
+                self.score_labels.append(hole_label)
+                self.score_spinboxes[player][i] = score_spinbox
 
-    # Save and open the map
-    map_path = "/tmp/golf_map.html"
-    golf_map.save(map_path)
-    webbrowser.open("file://" + map_path)
+                self.score_grid.addWidget(hole_label, player, i + 1)
+                self.score_grid.addWidget(score_spinbox, player + 1, i + 1)
 
-    # Update Distance in GUI
-    distance_label.config(text=f"Distance to {selected_hole.get()}: {distance:.2f} meters")
+        layout.addLayout(self.score_grid)
 
-# Auto Refresh Every 5 Seconds
-def auto_refresh():
-    while True:
-        update_distance()
-        time.sleep(5)
+        # Total Score Display
+        self.total_score_label = QLabel("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
+        self.total_score_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        layout.addWidget(self.total_score_label)
 
-# GUI Setup
-root = tk.Tk()
-root.title("Golf GPS Distance Tracker")
+        # GPS Functionality
+        self.drive_label = QLabel("🚗 Drive Distance: N/A")
+        self.range_label = QLabel("📍 Range to Pin: N/A")
+        for label in [self.drive_label, self.range_label]:
+            label.setFont(QFont("Comic Sans MS", 18))
+            label.setStyleSheet("color: white; padding: 5px;")
+            layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-Label(root, text="Golf GPS Tracker", font=("Arial", 16)).pack(pady=10)
+        button_style = """
+            QPushButton {
+                background-color: #FFEB3B;
+                font-size: 20px;
+                padding: 15px;
+                border-radius: 15px;
+                border: 2px solid black;
+            }
+            QPushButton:hover {
+                background-color: #FBC02D;
+            }
+            QPushButton:pressed {
+                background-color: #F57F17;
+            }
+        """
 
-# Dropdown for hole selection
-holes = get_holes()
-hole_var = tk.IntVar()
-hole_var.set(holes[0][0])  # Default to first hole
+        self.set_drive_start_btn = QPushButton("🚗 Set Drive Start")
+        self.set_drive_start_btn.setStyleSheet(button_style)
+        self.set_drive_start_btn.clicked.connect(self.set_drive_start)
+        layout.addWidget(self.set_drive_start_btn)
 
-selected_hole = ttk.Combobox(root, values=[h[1] for h in holes], state="readonly")
-selected_hole.pack(pady=10)
+        self.set_drive_end_btn = QPushButton("🏁 Set Drive End")
+        self.set_drive_end_btn.setStyleSheet(button_style)
+        self.set_drive_end_btn.clicked.connect(self.set_drive_end)
+        layout.addWidget(self.set_drive_end_btn)
 
-# Distance label
-distance_label = Label(root, text="Distance to Hole: Calculating...", font=("Arial", 14))
-distance_label.pack(pady=10)
+        self.set_pin_btn = QPushButton("Set Pin Location")
+        self.set_pin_btn.setStyleSheet(button_style)
+        self.set_pin_btn.clicked.connect(self.set_pin_location)
+        layout.addWidget(self.set_pin_btn)
 
-# Update button
-Button(root, text="Update Now", command=update_distance, font=("Arial", 12)).pack(pady=10)
+        # Reset Button
+        reset_button = QPushButton("🔄 Reset Scores")
+        reset_button.setStyleSheet(button_style)
+        reset_button.clicked.connect(self.reset_scores)
+        layout.addWidget(reset_button)
 
-# Start Auto-Refresh in Background
-threading.Thread(target=auto_refresh, daemon=True).start()
+        self.setLayout(layout)
 
-root.mainloop()
+    def update_score(self, player, hole, value):
+        self.scores[player][hole] = value
+        total_scores = [sum(self.scores[p]) for p in range(4)]
+        self.total_score_label.setText(
+            f"Total Scores: P1: {total_scores[0]} | P2: {total_scores[1]} | P3: {total_scores[2]} | P4: {total_scores[3]}"
+        )
+
+    def reset_scores(self):
+        for player in range(4):
+            for i in range(18):
+                self.scores[player][i] = 0
+                self.score_spinboxes[player][i].setValue(0)
+        self.total_score_label.setText("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
+
+    def get_gps_location(self):
+        try:
+            packet = gpsd.get_current()
+            return (packet.lat, packet.lon)
+        except Exception:
+            return None
+
+    def set_drive_start(self):
+        self.drive_start = self.get_gps_location()
+        if self.drive_start:
+            self.drive_label.setText("🚗 Drive Start Recorded")
+
+    def set_drive_end(self):
+        self.drive_end = self.get_gps_location()
+        if self.drive_end and self.drive_start:
+            distance = geopy.distance.distance(self.drive_start, self.drive_end).meters
+            self.drive_label.setText(f"🚗 Drive Distance: {distance:.2f} m")
+
+    def set_pin_location(self):
+        self.pin_location = self.get_gps_location()
+        if self.pin_location:
+            self.range_label.setText("🏁 Pin Location Set")
+            if self.drive_end:
+                distance = geopy.distance.distance(self.drive_end, self.pin_location).meters
+                self.range_label.setText(f"📍 Range to Pin: {distance:.2f} m")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = GolfRangeFinder()
+    window.show()
+    sys.exit(app.exec())
