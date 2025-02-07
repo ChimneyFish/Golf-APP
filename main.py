@@ -2,7 +2,7 @@ import sys
 import geopy.distance
 import gpsd
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QPalette, QColor, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
+    QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout, QPushButton, QLabel, QGridLayout, QSpinBox
 )
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
@@ -71,7 +71,6 @@ class GolfRangeFinder(QWidget):
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#4CAF50"))  # Green background
         self.setPalette(palette)
 
         layout = QVBoxLayout()

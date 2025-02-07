@@ -11,7 +11,7 @@ sudo apt install -y  minicom gpsd
 sudo apt --fix-broken install -y
 
 # Install required Python libraries
-pip3 install --user pynmea2 gpsd-py3 geopy PyQt6 requests serial folium --break-system-packages
+pip3 install --user pynmea2 gpsd-py3 geopy PyQt6 QtWidgets requests serial folium --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
