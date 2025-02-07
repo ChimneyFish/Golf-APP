@@ -6,7 +6,7 @@ echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
 sudo apt update 
 
 # Install required system packages
-sudo apt install -y  minicom python3-pyqt6.qtwebengine gpsd
+sudo apt install -y  minicom gpsd
 
 sudo apt --fix-broken install -y
 
