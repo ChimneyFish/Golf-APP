@@ -31,7 +31,7 @@ EOF
 
 # Backup and modify boot command line settings
 sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
-sudo tee /boot/firmware/cmdline.txt <<EOF
+sudo tee /boot/cmdline.txt <<EOF
 dwc_otg.lpm_enable=0 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
 EOF
@@ -76,7 +76,7 @@ sudo mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/Golf-Caddy.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/$User/Golf-APP/main_gui.py
+Exec=python3 /home/$User/Golf-APP/main.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
