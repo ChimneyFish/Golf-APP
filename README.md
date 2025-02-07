@@ -12,9 +12,9 @@ Python Based application To run on Raspberrypi that will act as a Rangefinder, d
  3. touch screen of some sorts to act as the interactive display
 
  # Hardware setup
- The GPS module connects + to pin 2 of the pi, - to pin 6 of the pi, and tx to pin 10 of the pie. 
+ The GPS module connects `+` to `pin 2` of the pi, `-` to `pin 6` of the pi, and `tx` to `pin 10` of the pi. 
 
- Please note, this setup is assuming that the Raspberry pie SD card will only be used to run this Application as it changes the overlays and functionality of the boot process within the OS.
+ **Please note, this setup is assuming that the Raspberry pie SD card will only be used to run this Application as it changes the overlays and functionality of the boot process within the OS.**
 
 ## This is still in the works and very buggy!
 
