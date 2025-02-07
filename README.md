@@ -8,7 +8,7 @@ Python Based application To run on Raspberrypi that will act as a Rangefinder, d
 
 # Hardware
  1. Raspberry Pi (doesn't matter which one, Pi's 3 and above are preferred)
- 2. GPS Module (I used https://www.amazon.com/dp/B0B49LB18G?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
+ 2. GPS Module ([This is what I used](https://www.amazon.com/dp/B0B49LB18G?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1))
  3. touch screen of some sorts to act as the interactive display
 
  # Hardware setup
