@@ -6,12 +6,12 @@ echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
 sudo apt update 
 
 # Install required system packages
-sudo apt install -y  minicom python3-pyqt6.qtwebengine 
+sudo apt install -y  minicom python3-pyqt6.qtwebengine gpsd
 
 sudo apt --fix-broken install -y
 
 # Install required Python libraries
-pip3 install --user pynmea2 gpsd-py3 geopy PyQt6 json sys requests serial folium --break-system-packages
+pip3 install --user pynmea2 gpsd-py3 geopy PyQt6 requests serial folium --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -21,7 +21,7 @@ sudo systemctl start gpsd
 echo "Configuring Raspberry Pi settings..."
 
 # Modify /boot/config.txt
-sudo tee -a /boot/firmware/config.txt <<EOF
+sudo tee -a /boot/config.txt <<EOF
 dtparam=spi=on
 dtoverlay=pi3-disable-bt
 core_freq=250
@@ -30,7 +30,7 @@ force_turbo=1
 EOF
 
 # Backup and modify boot command line settings
-sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline_backup.txt
+sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
 sudo tee /boot/firmware/cmdline.txt <<EOF
 dwc_otg.lpm_enable=0 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
