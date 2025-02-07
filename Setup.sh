@@ -76,7 +76,7 @@ sudo mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/Golf-Caddy.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/$User/Golf-APP/main.py
+Exec=python3 /home/admin/Golf-APP/main.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
