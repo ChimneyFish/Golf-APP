@@ -1,7 +1,7 @@
 # Golf-APP
 Python Based application To run on Raspberrypi that will act as a Rangefinder, drive distance calculator, and club suggestion caddy, as you play it learns how far you hit each club and will start to suggest a club to use based on the distance to the pin.  Will have a save course feature that will be saved in json format so eventually this repository will have a json file for many courses and you will not have to do the leg work.
 
-## Instalation
+## Installation
 1. Clone this repository onto your Raspberry Pi
 2. '''
    cd Golf-APP && Chmod +x Setup.sh
