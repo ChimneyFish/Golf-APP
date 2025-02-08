@@ -16,10 +16,11 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(400, 300)
+        self.setFixedSize(800, 600)  # Increased keyboard size
         
         layout = QVBoxLayout()
         self.input_field = QLineEdit(self)
+        self.input_field.setFont(QFont("Arial", 24))  # Increase font size for input field
         layout.addWidget(self.input_field)
         
         key_layout = QGridLayout()
@@ -32,6 +33,8 @@ class OnScreenKeyboard(QDialog):
         row, col = 0, 0
         for key in keys:
             button = QPushButton(' ' if key == 'Space' else key)
+            button.setFont(QFont("Arial", 18))  # Increase font size for buttons
+            button.setFixedSize(80, 80)  # Increase button size
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
             elif key == 'Backspace':
@@ -48,6 +51,8 @@ class OnScreenKeyboard(QDialog):
         
         action_layout = QHBoxLayout()
         self.ok_button = QPushButton("OK")
+        self.ok_button.setFont(QFont("Arial", 18))  # Increase font size for OK button
+        self.ok_button.setFixedSize(120, 80)  # Increase OK button size
         self.ok_button.clicked.connect(self.accept)
         action_layout.addWidget(self.ok_button)
         
