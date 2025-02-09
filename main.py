@@ -4,9 +4,9 @@ import geopy.distance
 import gpsd
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
-    QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox
+    QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget
 )
-from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtGui import QFont, QPalette, QColor, QIcon
 from PyQt5.QtCore import Qt
 
 data_file = "courses.json"
@@ -16,49 +16,44 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(800, 600)  # Increased keyboard size
-        
+        self.setFixedSize(800, 500)  # Adjusted size to fit 1024x600 screen
+
         layout = QVBoxLayout()
         self.input_field = QLineEdit(self)
         self.input_field.setFont(QFont("Arial", 24))  # Increase font size for input field
         layout.addWidget(self.input_field)
-        
+
         key_layout = QGridLayout()
         keys = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
             'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
             'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
-            'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Space', 'Backspace'
+            'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Space', 'Backspace', 'Enter'
         ]
         row, col = 0, 0
         for key in keys:
             button = QPushButton(' ' if key == 'Space' else key)
             button.setFont(QFont("Arial", 18))  # Increase font size for buttons
-            button.setFixedSize(80, 80)  # Increase button size
+            button.setFixedSize(70, 70)  # Adjust button size
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
             elif key == 'Backspace':
                 button.clicked.connect(lambda checked: self.input_field.backspace())
+            elif key == 'Enter':
+                button.clicked.connect(self.accept)
             else:
                 button.clicked.connect(lambda checked, k=key: self.input_field.insert(k))
+            button.setStyleSheet("border-radius: 35px;")  # Make buttons round
             key_layout.addWidget(button, row, col)
             col += 1
             if col > 9:
                 col = 0
                 row += 1
-        
+
         layout.addLayout(key_layout)
-        
-        action_layout = QHBoxLayout()
-        self.ok_button = QPushButton("OK")
-        self.ok_button.setFont(QFont("Arial", 18))  # Increase font size for OK button
-        self.ok_button.setFixedSize(120, 80)  # Increase OK button size
-        self.ok_button.clicked.connect(self.accept)
-        action_layout.addWidget(self.ok_button)
-        
-        layout.addLayout(action_layout)
+
         self.setLayout(layout)
-    
+
     def get_text(self):
         return self.input_field.text()
 
@@ -69,6 +64,7 @@ class GolfRangeFinder(QWidget):
         self.setFixedSize(1024, 600)
 
         self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
+        self.current_holes = list(range(9))  # Start with Front 9
         self.drive_start = None
         self.drive_end = None
         self.pin_location = None
@@ -79,7 +75,7 @@ class GolfRangeFinder(QWidget):
         self.selected_club = None
 
         gpsd.connect()  # Connect to GPS daemon
-        
+
         self.initUI()
 
     def initUI(self):
@@ -88,146 +84,209 @@ class GolfRangeFinder(QWidget):
         palette.setColor(QPalette.Window, QColor("#4CAF50"))  # Green background
         self.setPalette(palette)
 
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
 
         # Title Label
         self.title_label = QLabel("🏌️‍♂️ Golf Scorecard & GPS Tracker 🏌️‍♀️", self)
         self.title_label.setFont(QFont("Comic Sans MS", 24, QFont.Weight.Bold))
         self.title_label.setStyleSheet("color: white; text-align: center;")
-        layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
+        main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
-        # Course Name Input
+        # Course Name Input and Load Dropdown
+        course_layout = QHBoxLayout()
+
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Enter Course Name")
         self.course_name_input.setFont(QFont("Comic Sans MS", 16))
         self.course_name_input.setStyleSheet("color: black; padding: 5px;")
         self.course_name_input.mousePressEvent = self.show_keyboard
-        layout.addWidget(self.course_name_input, alignment=Qt.AlignCenter)
+        course_layout.addWidget(self.course_name_input)
 
-        # Course Load Dropdown
         self.load_course_dropdown = QComboBox(self)
         self.load_course_dropdown.addItem("Select Course to Load")
         self.load_course_dropdown.currentIndexChanged.connect(self.load_course_data)
-        layout.addWidget(self.load_course_dropdown, alignment=Qt.AlignCenter)
+        course_layout.addWidget(self.load_course_dropdown)
         self.load_courses()
 
-        # Score Grid
-        self.score_grid = QGridLayout()
-        self.score_labels = []
-        self.score_spinboxes = [[None] * 18 for _ in range(4)]
+        main_layout.addLayout(course_layout)
 
-        # Hole Labels
-        for i in range(18):
-            hole_label = QLabel(f"Hole {i + 1}")
-            hole_label.setFont(QFont("Comic Sans MS", 12))
-            hole_label.setStyleSheet("color: white;")
-            self.score_grid.addWidget(hole_label, 0, i + 1)
-        
-        # Player Labels and Score SpinBoxes
-        for player in range(4):
-            player_label = QLabel(self.player_names[player])
-            player_label.setFont(QFont("Comic Sans MS", 16, QFont.Weight.Bold))
-            player_label.setStyleSheet("color: white; padding: 5px;")
-            player_label.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
-            self.score_grid.addWidget(player_label, player + 1, 0)
+        # Stack Widget for Front 9 and Back 9
+        self.score_stack = QStackedWidget(self)
+        main_layout.addWidget(self.score_stack)
 
-            for i in range(18):
-                score_spinbox = QSpinBox()
-                score_spinbox.setRange(0, 10)
-                score_spinbox.setValue(self.scores[player][i])
-                score_spinbox.setFixedSize(50, 50)  # Make spinboxes easier to tap
-                score_spinbox.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
-                
-                self.score_spinboxes[player][i] = score_spinbox
+        # Create Front 9 and Back 9 score grids
+        self.create_score_grids()
 
-                self.score_grid.addWidget(score_spinbox, player + 1, i + 1)
+        # Toggle Buttons for Front 9 and Back 9
+        toggle_layout = QHBoxLayout()
+        self.front9_button = QPushButton("Front 9")
+        self.front9_button.setFont(QFont("Arial", 14))
+        self.front9_button.setFixedSize(100, 100)
+        self.front9_button.setStyleSheet("border-radius:50px; background-color:#FBC02D;")
+        self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
-        layout.addLayout(self.score_grid)
+        self.back9_button = QPushButton("Back 9")
+        self.back9_button.setFont(QFont("Arial", 14))
+        self.back9_button.setFixedSize(100, 100)
+        self.back9_button.setStyleSheet("border-radius:50px; background-color:#FBC02D;")
+        self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
+
+        toggle_layout.addWidget(self.front9_button, alignment=Qt.AlignCenter)
+        toggle_layout.addWidget(self.back9_button, alignment=Qt.AlignCenter)
+        main_layout.addLayout(toggle_layout)
 
         # Total Score Display
-        self.total_score_label = QLabel("Total Scores: P1: 0 | P2: 0 | P3: 0 | P4: 0")
+        self.total_score_label = QLabel("Total Scores:")
         self.total_score_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
-        layout.addWidget(self.total_score_label)
+        self.total_score_label.setStyleSheet("color: white;")
+        main_layout.addWidget(self.total_score_label)
 
-        # GPS Functionality
+        # GPS Functionality Labels
+        gps_layout = QHBoxLayout()
         self.drive_label = QLabel("🚗 Drive Distance: N/A")
         self.range_label = QLabel("📍 Range to Pin: N/A")
         for label in [self.drive_label, self.range_label]:
             label.setFont(QFont("Comic Sans MS", 18))
             label.setStyleSheet("color: white; padding: 5px;")
-            layout.addWidget(label, alignment=Qt.AlignCenter)
+            gps_layout.addWidget(label, alignment=Qt.AlignCenter)
+        main_layout.addLayout(gps_layout)
 
-        button_style = """
-            QPushButton {
-                background-color: #FFEB3B;
-                font-size: 18px;
-                padding: 10px;
-                border-radius: 10px;
-                border: 2px solid black;
-            }
-            QPushButton:hover {
-                background-color: #FBC02D;
-            }
-            QPushButton:pressed {
-                background-color: #F57F17;
-            }
-        """
+        # Buttons Layout
+        buttons_layout = QHBoxLayout()
 
-        # GPS Buttons
-        self.set_drive_start_btn = QPushButton("🚗 Set Drive Start")
-        self.set_drive_start_btn.setStyleSheet(button_style)
+        self.set_drive_start_btn = QPushButton()
+        self.set_drive_start_btn.setIcon(QIcon("drive_start_icon.png"))  # Add appropriate icons
+        self.set_drive_start_btn.setIconSize(Qt.QSize(50,50))
+        self.set_drive_start_btn.setFixedSize(80, 80)
+        self.set_drive_start_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
-        layout.addWidget(self.set_drive_start_btn)
+        self.set_drive_start_btn.setToolTip("Set Drive Start")
+        buttons_layout.addWidget(self.set_drive_start_btn)
 
-        self.set_drive_end_btn = QPushButton("🏁 Set Drive End")
-        self.set_drive_end_btn.setStyleSheet(button_style)
+        self.set_drive_end_btn = QPushButton()
+        self.set_drive_end_btn.setIcon(QIcon("drive_end_icon.png"))
+        self.set_drive_end_btn.setIconSize(Qt.QSize(50,50))
+        self.set_drive_end_btn.setFixedSize(80, 80)
+        self.set_drive_end_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
-        layout.addWidget(self.set_drive_end_btn)
+        self.set_drive_end_btn.setToolTip("Set Drive End")
+        buttons_layout.addWidget(self.set_drive_end_btn)
 
-        self.set_pin_btn = QPushButton("📌 Set Pin Location")
-        self.set_pin_btn.setStyleSheet(button_style)
+        self.set_pin_btn = QPushButton()
+        self.set_pin_btn.setIcon(QIcon("pin_icon.png"))
+        self.set_pin_btn.setIconSize(Qt.QSize(50,50))
+        self.set_pin_btn.setFixedSize(80, 80)
+        self.set_pin_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_pin_btn.clicked.connect(self.set_pin_location)
-        layout.addWidget(self.set_pin_btn)
+        self.set_pin_btn.setToolTip("Set Pin Location")
+        buttons_layout.addWidget(self.set_pin_btn)
 
         # Club Selection
         self.club_selection = QComboBox(self)
-        clubs = ["Driver", "3 Wood", "5 Wood", "Hybrid", "3 Iron", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
+        clubs = ["Select Club", "Driver", "3 Wood", "5 Wood", "Hybrid", "3 Iron", "4 Iron", "5 Iron",
+                 "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
         self.club_selection.addItems(clubs)
+        self.club_selection.setFont(QFont("Arial", 14))
+        self.club_selection.setStyleSheet("background-color: white;")
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
-        layout.addWidget(self.club_selection)
+        buttons_layout.addWidget(self.club_selection)
 
-               # Reset Button
-        reset_button = QPushButton("🔄 Reset Scores")
-        reset_button.setStyleSheet(button_style)
+        # Reset Button
+        reset_button = QPushButton("Reset")
+        reset_button.setFont(QFont("Arial", 14))
+        reset_button.setFixedSize(80, 80)
+        reset_button.setStyleSheet("border-radius:40px; background-color:#EF5350; color: white;")
         reset_button.clicked.connect(self.reset_scores)
-        layout.addWidget(reset_button)
+        buttons_layout.addWidget(reset_button)
 
         # Save Button
-        save_button = QPushButton("💾 Save Course Data")
-        save_button.setStyleSheet(button_style)
+        save_button = QPushButton("Save")
+        save_button.setFont(QFont("Arial", 14))
+        save_button.setFixedSize(80, 80)
+        save_button.setStyleSheet("border-radius:40px; background-color:#66BB6A; color: white;")
         save_button.clicked.connect(self.save_course_data)
-        layout.addWidget(save_button)
+        buttons_layout.addWidget(save_button)
 
-        # Save Club Data Button
-        save_club_button = QPushButton("💾 Save Club Data")
-        save_club_button.setStyleSheet(button_style)
-        save_club_button.clicked.connect(self.save_club_data)
-        layout.addWidget(save_club_button)
+        main_layout.addLayout(buttons_layout)
 
-        self.setLayout(layout)
+    def create_score_grids(self):
+        # Front 9
+        self.front9_widget = QWidget()
+        front9_layout = QGridLayout()
+        self.front9_widget.setLayout(front9_layout)
+
+        # Back 9
+        self.back9_widget = QWidget()
+        back9_layout = QGridLayout()
+        self.back9_widget.setLayout(back9_layout)
+
+        self.score_stack.addWidget(self.front9_widget)
+        self.score_stack.addWidget(self.back9_widget)
+
+        for player in range(4):
+            # Player Labels
+            player_label_front = QLabel(self.player_names[player])
+            player_label_front.setFont(QFont("Comic Sans MS", 14, QFont.Weight.Bold))
+            player_label_front.setStyleSheet("color: white; padding: 5px;")
+            player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+
+            player_label_back = QLabel(self.player_names[player])
+            player_label_back.setFont(QFont("Comic Sans MS", 14, QFont.Weight.Bold))
+            player_label_back.setStyleSheet("color: white; padding: 5px;")
+            player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+
+            front9_layout.addWidget(player_label_front, player + 1, 0)
+            back9_layout.addWidget(player_label_back, player + 1, 0)
+
+            for i in range(9):
+                # Front 9 Holes
+                if player == 0:
+                    hole_label = QLabel(f"Hole {i + 1}")
+                    hole_label.setFont(QFont("Comic Sans MS", 12))
+                    hole_label.setStyleSheet("color: white;")
+                    front9_layout.addWidget(hole_label, 0, i + 1)
+
+                score_spinbox_front = QSpinBox()
+                score_spinbox_front.setRange(0, 10)
+                score_spinbox_front.setValue(self.scores[player][i])
+                score_spinbox_front.setFixedSize(50, 50)
+                score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+                front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
+
+                # Back 9 Holes
+                if player == 0:
+                    hole_label = QLabel(f"Hole {i + 10}")
+                    hole_label.setFont(QFont("Comic Sans MS", 12))
+                    hole_label.setStyleSheet("color: white;")
+                    back9_layout.addWidget(hole_label, 0, i + 1)
+
+                score_spinbox_back = QSpinBox()
+                score_spinbox_back.setRange(0, 10)
+                score_spinbox_back.setValue(self.scores[player][i + 9])
+                score_spinbox_back.setFixedSize(50, 50)
+                score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
+                back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
-        if keyboard.exec() == QDialog.Accepted:
+        if keyboard.exec_() == QDialog.Accepted:
             self.course_name_input.setText(keyboard.get_text())
 
     def show_keyboard_for_player(self, player):
         keyboard = OnScreenKeyboard(self)
-        if keyboard.exec() == QDialog.Accepted:
+        if keyboard.exec_() == QDialog.Accepted:
             name = keyboard.get_text()
             self.player_names[player] = name
-            player_label = self.score_grid.itemAtPosition(player + 1, 0).widget()
-            player_label.setText(name)
+            self.update_player_labels()
+
+    def update_player_labels(self):
+        # Update player labels on both Front 9 and Back 9
+        for index, widget in enumerate([self.front9_widget, self.back9_widget]):
+            layout = widget.layout()
+            for player in range(4):
+                player_label = layout.itemAtPosition(player + 1, 0).widget()
+                player_label.setText(self.player_names[player])
 
     def update_score(self, player, hole, value):
         self.scores[player][hole] = value
@@ -243,13 +302,18 @@ class GolfRangeFinder(QWidget):
         for player in range(4):
             for i in range(18):
                 self.scores[player][i] = 0
-                self.score_spinboxes[player][i].setValue(0)
-        self.total_score_label.setText(
-            f"Total Scores: {self.player_names[0]}: 0 | "
-            f"{self.player_names[1]}: 0 | "
-            f"{self.player_names[2]}: 0 | "
-            f"{self.player_names[3]}: 0"
-        )
+        self.update_spinboxes()
+        self.update_score(0, 0, 0)  # Update total scores
+
+    def update_spinboxes(self):
+        # Update spinboxes on both Front 9 and Back 9
+        for index, widget in enumerate([self.front9_widget, self.back9_widget]):
+            layout = widget.layout()
+            for player in range(4):
+                for i in range(9):
+                    spinbox = layout.itemAtPosition(player + 1, i + 1).widget()
+                    hole_index = i + (0 if index == 0 else 9)
+                    spinbox.setValue(self.scores[player][hole_index])
 
     def get_gps_location(self):
         try:
@@ -351,10 +415,13 @@ class GolfRangeFinder(QWidget):
         self.load_course_dropdown.addItem(self.course_name)
 
     def set_selected_club(self, index):
-        self.selected_club = self.club_selection.currentText()
+        if index == 0:
+            self.selected_club = None
+        else:
+            self.selected_club = self.club_selection.currentText()
 
     def record_club_distance(self, distance):
-        if not self.selected_club:
+        if not self.selected_club or self.selected_club == "Select Club":
             return
         if self.selected_club not in self.club_distances:
             self.club_distances[self.selected_club] = []
