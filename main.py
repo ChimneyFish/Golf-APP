@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget
 )
 from PyQt5.QtGui import QFont, QPalette, QColor, QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize  # Import QSize here
 
 data_file = "courses.json"
 club_data_file = "club_data.json"
@@ -153,11 +153,12 @@ class GolfRangeFinder(QWidget):
         main_layout.addLayout(gps_layout)
 
         # Buttons Layout
+       
         buttons_layout = QHBoxLayout()
 
         self.set_drive_start_btn = QPushButton()
         self.set_drive_start_btn.setIcon(QIcon("drive_start_icon.png"))  # Add appropriate icons
-        self.set_drive_start_btn.setIconSize(Qt.QSize(50,50))
+        self.set_drive_start_btn.setIconSize(QSize(50, 50))  # Use QSize without Qt.
         self.set_drive_start_btn.setFixedSize(80, 80)
         self.set_drive_start_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
@@ -166,7 +167,7 @@ class GolfRangeFinder(QWidget):
 
         self.set_drive_end_btn = QPushButton()
         self.set_drive_end_btn.setIcon(QIcon("drive_end_icon.png"))
-        self.set_drive_end_btn.setIconSize(Qt.QSize(50,50))
+        self.set_drive_end_btn.setIconSize(QSize(50, 50))
         self.set_drive_end_btn.setFixedSize(80, 80)
         self.set_drive_end_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
@@ -175,7 +176,7 @@ class GolfRangeFinder(QWidget):
 
         self.set_pin_btn = QPushButton()
         self.set_pin_btn.setIcon(QIcon("pin_icon.png"))
-        self.set_pin_btn.setIconSize(Qt.QSize(50,50))
+        self.set_pin_btn.setIconSize(QSize(50, 50))
         self.set_pin_btn.setFixedSize(80, 80)
         self.set_pin_btn.setStyleSheet("border-radius:40px; background-color:#FFEB3B;")
         self.set_pin_btn.clicked.connect(self.set_pin_location)
