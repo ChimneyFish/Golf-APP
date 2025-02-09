@@ -2,12 +2,12 @@ import sys
 import json
 import geopy.distance
 import gpsd
-from PyQt6.QtWidgets import (
+from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox
 )
-from PyQt6.QtGui import QFont, QPalette, QColor
-from PyQt6.QtCore import Qt
+from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtCore import Qt
 
 data_file = "courses.json"
 club_data_file = "club_data.json"
@@ -61,6 +61,9 @@ class OnScreenKeyboard(QDialog):
     
     def get_text(self):
         return self.input_field.text()
+
+# The rest of your code remains unchanged
+
 
 class GolfRangeFinder(QWidget):
     def __init__(self):
