@@ -62,9 +62,6 @@ class OnScreenKeyboard(QDialog):
     def get_text(self):
         return self.input_field.text()
 
-# The rest of your code remains unchanged
-
-
 class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
@@ -88,7 +85,7 @@ class GolfRangeFinder(QWidget):
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#4CAF50"))  # Green background
+        palette.setColor(QPalette.Window, QColor("#4CAF50"))  # Green background
         self.setPalette(palette)
 
         layout = QVBoxLayout()
@@ -97,7 +94,7 @@ class GolfRangeFinder(QWidget):
         self.title_label = QLabel("🏌️‍♂️ Golf Scorecard & GPS Tracker 🏌️‍♀️", self)
         self.title_label.setFont(QFont("Comic Sans MS", 24, QFont.Weight.Bold))
         self.title_label.setStyleSheet("color: white; text-align: center;")
-        layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         # Course Name Input
         self.course_name_input = QLineEdit(self)
@@ -105,13 +102,13 @@ class GolfRangeFinder(QWidget):
         self.course_name_input.setFont(QFont("Comic Sans MS", 16))
         self.course_name_input.setStyleSheet("color: black; padding: 5px;")
         self.course_name_input.mousePressEvent = self.show_keyboard
-        layout.addWidget(self.course_name_input, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.course_name_input, alignment=Qt.AlignCenter)
 
         # Course Load Dropdown
         self.load_course_dropdown = QComboBox(self)
         self.load_course_dropdown.addItem("Select Course to Load")
         self.load_course_dropdown.currentIndexChanged.connect(self.load_course_data)
-        layout.addWidget(self.load_course_dropdown, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.load_course_dropdown, alignment=Qt.AlignCenter)
         self.load_courses()
 
         # Score Grid
@@ -158,7 +155,7 @@ class GolfRangeFinder(QWidget):
         for label in [self.drive_label, self.range_label]:
             label.setFont(QFont("Comic Sans MS", 18))
             label.setStyleSheet("color: white; padding: 5px;")
-            layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(label, alignment=Qt.AlignCenter)
 
         button_style = """
             QPushButton {
@@ -199,7 +196,7 @@ class GolfRangeFinder(QWidget):
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         layout.addWidget(self.club_selection)
 
-        # Reset Button
+               # Reset Button
         reset_button = QPushButton("🔄 Reset Scores")
         reset_button.setStyleSheet(button_style)
         reset_button.clicked.connect(self.reset_scores)
@@ -221,12 +218,12 @@ class GolfRangeFinder(QWidget):
 
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
-        if keyboard.exec() == QDialog.DialogCode.Accepted:
+        if keyboard.exec() == QDialog.Accepted:
             self.course_name_input.setText(keyboard.get_text())
 
     def show_keyboard_for_player(self, player):
         keyboard = OnScreenKeyboard(self)
-        if keyboard.exec() == QDialog.DialogCode.Accepted:
+        if keyboard.exec() == QDialog.Accepted:
             name = keyboard.get_text()
             self.player_names[player] = name
             player_label = self.score_grid.itemAtPosition(player + 1, 0).widget()
@@ -384,5 +381,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GolfRangeFinder()
     window.show()
-    sys.exit(app.exec())
- 
+    sys.exit(app.exec_())
