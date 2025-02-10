@@ -293,34 +293,34 @@ class GolfRangeFinder(QWidget):
             front9_layout.addWidget(player_label_front, player + 1, 0)
             back9_layout.addWidget(player_label_back, player + 1, 0)
 
-            for i in range(9):
+        for i in range(9):
                 # Front 9 Holes
-                if player == 0:
-                   hole_label = QLabel(f"{i + 1}")
-                   hole_label.setFont(QFont("Arial", 10))
-                   hole_label.setStyleSheet("color: white;")
-                   front9_layout.addWidget(hole_label, 0, i + 1)
+            if player == 0:
+                hole_label = QLabel(f"{i + 1}")
+                hole_label.setFont(QFont("Arial", 10))
+                hole_label.setStyleSheet("color: white;")
+                front9_layout.addWidget(hole_label, 0, i + 1)
 
-                   score_spinbox_front = QSpinBox()
-                   score_spinbox_front.setRange(0, 10)
-                   score_spinbox_front.setValue(self.scores[player][i])
-                   score_spinbox_front.setFixedSize(50, 50)
-                   score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
-                   front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
+            score_spinbox_front = QSpinBox()
+            score_spinbox_front.setRange(0, 10)
+            score_spinbox_front.setValue(self.scores[player][i])
+            score_spinbox_front.setFixedSize(50, 50)
+            score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+            front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
 
                    # Back 9 Holes
-                   if player == 0:
-                       hole_label = QLabel(f"{i + 10}")
-                       hole_label.setFont(QFont("Arial", 10))
-                       hole_label.setStyleSheet("color: white;")
-                       back9_layout.addWidget(hole_label, 0, i + 1)
+            if player == 0:
+                hole_label = QLabel(f"{i + 10}")
+                hole_label.setFont(QFont("Arial", 10))
+                hole_label.setStyleSheet("color: white;")
+                back9_layout.addWidget(hole_label, 0, i + 1)
 
-                score_spinbox_back = QSpinBox()
-                score_spinbox_back.setRange(0, 10)
-                score_spinbox_back.setValue(self.scores[player][i + 9])
-                score_spinbox_back.setFixedSize(50, 50)
-                score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
-                back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
+            score_spinbox_back = QSpinBox()
+            score_spinbox_back.setRange(0, 10)
+            score_spinbox_back.setValue(self.scores[player][i + 9])
+            score_spinbox_back.setFixedSize(50, 50)
+            score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
+            back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
