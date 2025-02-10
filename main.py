@@ -1,13 +1,14 @@
 import sys
 import json
 import geopy.distance
-import gpsd
+import serial
+import pynmea2
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
 )
 from PyQt5.QtGui import QFont, QPalette, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 data_file = "courses.json"
 club_data_file = "club_data.json"
@@ -16,7 +17,7 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(500, 200)  # Further adjusted size
+        self.setFixedSize(700, 300)  # Adjusted size
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -38,7 +39,7 @@ class OnScreenKeyboard(QDialog):
         row, col = 0, 0
         for key in keys:
             button = QPushButton(' ' if key == 'Space' else key)
-            button.setFont(QFont("Arial", 14))  # Adjusted font size
+            button.setFont(QFont("Arial", 12))  # Adjusted font size
             button.setFixedSize(50, 50)  # Adjusted button size
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
@@ -61,26 +62,61 @@ class OnScreenKeyboard(QDialog):
     def get_text(self):
         return self.input_field.text()
 
+class GPSReader(QThread):
+    location_updated = pyqtSignal(float, float)
+
+    def __init__(self, port="/dev/ttyAMA0", baudrate=9600):
+        super().__init__()
+        self.port = port
+        self.baudrate = baudrate
+        self.running = True
+
+    def run(self):
+        try:
+            with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.5) as ser:
+                while self.running:
+                    try:
+                        newdata = ser.readline().decode("utf-8", errors="ignore").strip()
+                        if newdata.startswith("$GPRMC"):
+                            try:
+                                newmsg = pynmea2.parse(newdata)
+                                if newmsg.status == 'A':  # Data Valid
+                                    lat = newmsg.latitude
+                                    lng = newmsg.longitude
+                                    self.location_updated.emit(lat, lng)
+                            except pynmea2.ParseError:
+                                pass  # Ignore parsing errors
+                    except serial.SerialException as e:
+                        print(f"Serial error: {e}")
+                        break  # Exit loop on serial error
+        except serial.SerialException as e:
+            print(f"Unable to open serial port: {e}")
+
+    def stop(self):
+        self.running = False
+        self.wait()
+
 class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFixedSize(650, 450)
+        self.setFixedSize(1024, 600)
 
         self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
         self.drive_start = None
         self.drive_end = None
         self.pin_location = None
+        self.current_location = None  # To store the latest GPS coordinates
         self.course_name = ""
         self.player_names = ["Player 1", "Player 2", "Player 3", "Player 4"]
         self.course_data = {}  # To store tee and pin locations for courses
         self.club_distances = {}  # To store distances for each club
         self.selected_club = None
 
-        try:
-            gpsd.connect()  # Connect to GPS daemon
-        except Exception:
-            pass  # Handle GPS connection errors silently for now
+        # Initialize GPS Reader Thread
+        self.gps_reader = GPSReader()
+        self.gps_reader.location_updated.connect(self.update_current_location)
+        self.gps_reader.start()
 
         self.initUI()
 
@@ -97,7 +133,7 @@ class GolfRangeFinder(QWidget):
 
         # Title Label
         self.title_label = QLabel("Golf Scorecard & GPS Tracker", self)
-        self.title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
+        self.title_label.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         self.title_label.setStyleSheet("color: white;")
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
@@ -107,8 +143,8 @@ class GolfRangeFinder(QWidget):
 
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Course Name")
-        self.course_name_input.setFont(QFont("Arial", 14))
-        self.course_name_input.setFixedHeight(30)
+        self.course_name_input.setFont(QFont("Arial", 12))
+        self.course_name_input.setFixedHeight(25)
         self.course_name_input.mousePressEvent = self.show_keyboard
         course_layout.addWidget(self.course_name_input)
 
@@ -116,7 +152,7 @@ class GolfRangeFinder(QWidget):
         self.load_course_dropdown.addItem("Select Course")
         self.load_course_dropdown.currentIndexChanged.connect(self.load_course_data)
         self.load_courses()
-        self.load_course_dropdown.setFixedHeight(30)
+        self.load_course_dropdown.setFixedHeight(25)
         course_layout.addWidget(self.load_course_dropdown)
 
         main_layout.addLayout(course_layout)
@@ -136,13 +172,13 @@ class GolfRangeFinder(QWidget):
         toggle_layout.setSpacing(5)
 
         self.front9_button = QPushButton("Front 9")
-        self.front9_button.setFont(QFont("Arial", 12))
-        self.front9_button.setFixedSize(80, 40)
+        self.front9_button.setFont(QFont("Arial", 10))
+        self.front9_button.setFixedSize(60, 30)
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
-        self.back9_button.setFont(QFont("Arial", 12))
-        self.back9_button.setFixedSize(80, 40)
+        self.back9_button.setFont(QFont("Arial", 10))
+        self.back9_button.setFixedSize(60, 30)
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
 
         toggle_layout.addWidget(self.front9_button)
@@ -151,7 +187,7 @@ class GolfRangeFinder(QWidget):
 
         # Total Score Display
         self.total_score_label = QLabel("Total Scores:")
-        self.total_score_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        self.total_score_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
         self.total_score_label.setStyleSheet("color: white;")
         main_layout.addWidget(self.total_score_label, alignment=Qt.AlignCenter)
 
@@ -160,12 +196,12 @@ class GolfRangeFinder(QWidget):
         gps_layout.setSpacing(5)
 
         self.drive_label = QLabel("Drive Distance: N/A")
-        self.drive_label.setFont(QFont("Arial", 14))
+        self.drive_label.setFont(QFont("Arial", 10))
         self.drive_label.setStyleSheet("color: white;")
         gps_layout.addWidget(self.drive_label)
 
         self.range_label = QLabel("Range to Pin: N/A")
-        self.range_label.setFont(QFont("Arial", 14))
+        self.range_label.setFont(QFont("Arial", 10))
         self.range_label.setStyleSheet("color: white;")
         gps_layout.addWidget(self.range_label)
 
@@ -176,21 +212,21 @@ class GolfRangeFinder(QWidget):
         buttons_layout.setSpacing(5)
 
         self.set_drive_start_btn = QPushButton("Start")
-        self.set_drive_start_btn.setFont(QFont("Arial", 12))
+        self.set_drive_start_btn.setFont(QFont("Arial", 10))
         self.set_drive_start_btn.setFixedSize(50, 30)
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
         self.set_drive_start_btn.setToolTip("Set Drive Start")
         buttons_layout.addWidget(self.set_drive_start_btn)
 
         self.set_drive_end_btn = QPushButton("End")
-        self.set_drive_end_btn.setFont(QFont("Arial", 12))
+        self.set_drive_end_btn.setFont(QFont("Arial", 10))
         self.set_drive_end_btn.setFixedSize(50, 30)
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
         self.set_drive_end_btn.setToolTip("Set Drive End")
         buttons_layout.addWidget(self.set_drive_end_btn)
 
         self.set_pin_btn = QPushButton("Pin")
-        self.set_pin_btn.setFont(QFont("Arial",12))
+        self.set_pin_btn.setFont(QFont("Arial", 10))
         self.set_pin_btn.setFixedSize(50, 30)
         self.set_pin_btn.clicked.connect(self.set_pin_location)
         self.set_pin_btn.setToolTip("Set Pin Location")
@@ -199,24 +235,24 @@ class GolfRangeFinder(QWidget):
         # Club Selection
         self.club_selection = QComboBox(self)
         clubs = ["Select Club", "Driver", "3 Wood", "5 Wood", "Hybrid", "3 Iron", "4 Iron", "5 Iron",
-                 "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
+                "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
         self.club_selection.addItems(clubs)
-        self.club_selection.setFont(QFont("Arial", 14))
+        self.club_selection.setFont(QFont("Arial", 10))
         self.club_selection.setFixedHeight(25)
-        self.club_selection.setFixedWidth(130)
+        self.club_selection.setFixedWidth(120)
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         buttons_layout.addWidget(self.club_selection)
 
         # Reset and Save Buttons
         reset_button = QPushButton("Reset")
-        reset_button.setFont(QFont("Arial", 12))
+        reset_button.setFont(QFont("Arial", 10))
         reset_button.setFixedSize(50, 30)
         reset_button.setStyleSheet("background-color:#EF5350; color: white;")
         reset_button.clicked.connect(self.reset_scores)
         buttons_layout.addWidget(reset_button)
 
         save_button = QPushButton("Save")
-        save_button.setFont(QFont("Arial", 12))
+        save_button.setFont(QFont("Arial", 10))
         save_button.setFixedSize(50, 30)
         save_button.setStyleSheet("background-color:#66BB6A; color: white;")
         save_button.clicked.connect(self.save_course_data)
@@ -228,29 +264,29 @@ class GolfRangeFinder(QWidget):
         # Front 9
         self.front9_widget = QWidget()
         front9_layout = QGridLayout()
-        front9_layout.setSpacing(4)
-        front9_layout.setContentsMargins(4, 4, 4, 4)
+        front9_layout.setSpacing(2)
+        front9_layout.setContentsMargins(0, 0, 0, 0)
         self.front9_widget.setLayout(front9_layout)
 
-        # Back 9
+            # Back 9
         self.back9_widget = QWidget()
         back9_layout = QGridLayout()
-        back9_layout.setSpacing(4)
-        back9_layout.setContentsMargins(4, 4, 4, 4)
+        back9_layout.setSpacing(2)
+        back9_layout.setContentsMargins(0, 0, 0, 0)
         self.back9_widget.setLayout(back9_layout)
 
         self.score_stack.addWidget(self.front9_widget)
         self.score_stack.addWidget(self.back9_widget)
 
         for player in range(4):
-            # Player Labels
+         # Player Labels
             player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+            player_label_front.setFont(QFont("Arial", 10, QFont.Weight.Bold))
             player_label_front.setStyleSheet("color: white;")
             player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
 
             player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+            player_label_back.setFont(QFont("Arial", 10, QFont.Weight.Bold))
             player_label_back.setStyleSheet("color: white;")
             player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
 
@@ -260,36 +296,36 @@ class GolfRangeFinder(QWidget):
             for i in range(9):
                 # Front 9 Holes
                 if player == 0:
-                    hole_label = QLabel(f"{i + 1}")
-                    hole_label.setFont(QFont("Arial", 12))
-                    hole_label.setStyleSheet("color: white;")
-                    front9_layout.addWidget(hole_label, 0, i + 1)
+                   hole_label = QLabel(f"{i + 1}")
+                   hole_label.setFont(QFont("Arial", 8))
+                   hole_label.setStyleSheet("color: white;")
+                   front9_layout.addWidget(hole_label, 0, i + 1)
 
-                score_spinbox_front = QSpinBox()
-                score_spinbox_front.setRange(0, 10)
-                score_spinbox_front.setValue(self.scores[player][i])
-                score_spinbox_front.setFixedSize(50, 50)
-                score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
-                front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
+                   score_spinbox_front = QSpinBox()
+                   score_spinbox_front.setRange(0, 10)
+                   score_spinbox_front.setValue(self.scores[player][i])
+                   score_spinbox_front.setFixedSize(30, 30)
+                   score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+                   front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
 
-                # Back 9 Holes
-                if player == 0:
-                    hole_label = QLabel(f"{i + 10}")
-                    hole_label.setFont(QFont("Arial", 10))
-                    hole_label.setStyleSheet("color: white;")
-                    back9_layout.addWidget(hole_label, 0, i + 1)
+                   # Back 9 Holes
+                   if player == 0:
+                       hole_label = QLabel(f"{i + 10}")
+                       hole_label.setFont(QFont("Arial", 8))
+                       hole_label.setStyleSheet("color: white;")
+                       back9_layout.addWidget(hole_label, 0, i + 1)
 
                 score_spinbox_back = QSpinBox()
                 score_spinbox_back.setRange(0, 10)
                 score_spinbox_back.setValue(self.scores[player][i + 9])
-                score_spinbox_back.setFixedSize(50, 50)
+                score_spinbox_back.setFixedSize(30, 30)
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
         if keyboard.exec_() == QDialog.Accepted:
-            self.course_name_input.setText(keyboard.get_text())
+           self.course_name_input.setText(keyboard.get_text())
 
     def show_keyboard_for_player(self, player):
         keyboard = OnScreenKeyboard(self)
@@ -333,14 +369,13 @@ class GolfRangeFinder(QWidget):
                     hole_index = i + (0 if index == 0 else 9)
                     spinbox.setValue(self.scores[player][hole_index])
 
+    def update_current_location(self, lat, lng):
+        self.current_location = (lat, lng)
+
     def get_gps_location(self):
-        try:
-            packet = gpsd.get_current()
-            if packet.mode >= 2:
-                return (packet.lat, packet.lon)
-            else:
-                return None
-        except Exception:
+        if self.current_location:
+            return self.current_location
+        else:
             return None
 
     def set_drive_start(self):
@@ -375,6 +410,8 @@ class GolfRangeFinder(QWidget):
         try:
             with open(data_file, 'r') as f:
                 courses = json.load(f)
+                self.load_course_dropdown.clear()
+                self.load_course_dropdown.addItem("Select Course")
                 for course in courses:
                     self.load_course_dropdown.addItem(course['course_name'])
         except FileNotFoundError:
@@ -389,13 +426,17 @@ class GolfRangeFinder(QWidget):
                 courses = json.load(f)
                 for course in courses:
                     if course['course_name'] == course_name:
-                        self.course_name_input.setText(course['course_name'])
+                        self.course_name_input.setText(course_name)
                         self.drive_start = course.get('tee_location', None)
                         self.pin_location = course.get('pin_location', None)
                         if self.drive_start:
                             self.drive_label.setText("Drive Start Recorded")
+                        else:
+                            self.drive_label.setText("Drive Start: N/A")
                         if self.pin_location:
                             self.range_label.setText("Pin Location Set")
+                        else:
+                            self.range_label.setText("Pin Location: N/A")
                         break
         except FileNotFoundError:
             pass
@@ -419,6 +460,8 @@ class GolfRangeFinder(QWidget):
         except FileNotFoundError:
             courses = []
 
+        # Remove any existing course with the same name
+        courses = [c for c in courses if c['course_name'] != self.course_name]
         courses.append(course_info)
 
         with open(data_file, 'w') as f:
@@ -430,7 +473,7 @@ class GolfRangeFinder(QWidget):
         self.drive_start = self.drive_end = self.pin_location = None
 
         self.title_label.setText(f"Course '{self.course_name}' Saved Successfully!")
-        self.load_course_dropdown.addItem(self.course_name)
+        self.load_courses()
 
     def set_selected_club(self, index):
         if index == 0:
@@ -462,8 +505,14 @@ class GolfRangeFinder(QWidget):
 
         return club_recommendation
 
+    def closeEvent(self, event):
+        # Stop the GPS reader thread when the application is closed
+        self.gps_reader.stop()
+        event.accept()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GolfRangeFinder()
     window.show()
     sys.exit(app.exec_())
+
