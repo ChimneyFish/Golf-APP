@@ -65,7 +65,7 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFixedSize(650, 440)
+        self.setFixedSize(650, 450)
 
         self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
         self.drive_start = None
@@ -203,7 +203,7 @@ class GolfRangeFinder(QWidget):
         self.club_selection.addItems(clubs)
         self.club_selection.setFont(QFont("Arial", 14))
         self.club_selection.setFixedHeight(25)
-        self.club_selection.setFixedWidth(120)
+        self.club_selection.setFixedWidth(130)
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         buttons_layout.addWidget(self.club_selection)
 
