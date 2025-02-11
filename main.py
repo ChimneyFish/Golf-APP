@@ -260,67 +260,67 @@ class GolfRangeFinder(QWidget):
 
         main_layout.addLayout(buttons_layout)
 
-    def create_score_grids(self):
-        # Front 9
-        self.front9_widget = QWidget()
-        front9_layout = QGridLayout()
-        front9_layout.setSpacing(2)
-        front9_layout.setContentsMargins(4, 4, 4, 4)
-        self.front9_widget.setLayout(front9_layout)
+        def create_score_grids(self):
+            # Front 9
+            self.front9_widget = QWidget()
+            front9_layout = QGridLayout()
+            front9_layout.setSpacing(2)
+            front9_layout.setContentsMargins(0, 0, 0, 0)
+            self.front9_widget.setLayout(front9_layout)
 
             # Back 9
-        self.back9_widget = QWidget()
-        back9_layout = QGridLayout()
-        back9_layout.setSpacing(2)
-        back9_layout.setContentsMargins(4, 4, 4, 4)
-        self.back9_widget.setLayout(back9_layout)
+            self.back9_widget = QWidget()
+            back9_layout = QGridLayout()
+            back9_layout.setSpacing(2)
+            back9_layout.setContentsMargins(0, 0, 0, 0)
+            self.back9_widget.setLayout(back9_layout)
 
-        self.score_stack.addWidget(self.front9_widget)
-        self.score_stack.addWidget(self.back9_widget)
+            self.score_stack.addWidget(self.front9_widget)
+            self.score_stack.addWidget(self.back9_widget)
 
-        for player in range(4):
-         # Player Labels
-            player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-            player_label_front.setStyleSheet("color: white;")
-            player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+            for player in range(4):
+                # Player Labels
+                player_label_front = QLabel(self.player_names[player])
+                player_label_front.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+                player_label_front.setStyleSheet("color: white;")
+                player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
 
-            player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-            player_label_back.setStyleSheet("color: white;")
-            player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+                player_label_back = QLabel(self.player_names[player])
+                player_label_back.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+                player_label_back.setStyleSheet("color: white;")
+                player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
 
-            front9_layout.addWidget(player_label_front, player + 1, 0)
-            back9_layout.addWidget(player_label_back, player + 1, 0)
+                front9_layout.addWidget(player_label_front, player + 1, 0)
+                back9_layout.addWidget(player_label_back, player + 1, 0)
 
-        for i in range(9):
-                # Front 9 Holes
-            if player == 0:
-                hole_label = QLabel(f"{i + 1}")
-                hole_label.setFont(QFont("Arial", 10))
-                hole_label.setStyleSheet("color: white;")
-                front9_layout.addWidget(hole_label, 0, i + 1)
+                for i in range(9):
+                    # Front 9 Holes
+                    if player == 0:
+                        hole_label = QLabel(f"{i + 1}")
+                        hole_label.setFont(QFont("Arial", 8))
+                        hole_label.setStyleSheet("color: white;")
+                        front9_layout.addWidget(hole_label, 0, i + 1)
 
-            score_spinbox_front = QSpinBox()
-            score_spinbox_front.setRange(0, 10)
-            score_spinbox_front.setValue(self.scores[player][i])
-            score_spinbox_front.setFixedSize(50, 50)
-            score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
-            front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
+                    score_spinbox_front = QSpinBox()
+                    score_spinbox_front.setRange(0, 10)
+                    score_spinbox_front.setValue(self.scores[player][i])
+                    score_spinbox_front.setFixedSize(30, 30)
+                    score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+                    front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
 
-                   # Back 9 Holes
-            if player == 0:
-                hole_label = QLabel(f"{i + 10}")
-                hole_label.setFont(QFont("Arial", 10))
-                hole_label.setStyleSheet("color: white;")
-                back9_layout.addWidget(hole_label, 0, i + 1)
+                    # Back 9 Holes
+                    if player == 0:
+                        hole_label = QLabel(f"{i + 10}")
+                        hole_label.setFont(QFont("Arial", 8))
+                        hole_label.setStyleSheet("color: white;")
+                        back9_layout.addWidget(hole_label, 0, i + 1)
 
-            score_spinbox_back = QSpinBox()
-            score_spinbox_back.setRange(0, 10)
-            score_spinbox_back.setValue(self.scores[player][i + 9])
-            score_spinbox_back.setFixedSize(50, 50)
-            score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
-            back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
+                    score_spinbox_back = QSpinBox()
+                    score_spinbox_back.setRange(0, 10)
+                    score_spinbox_back.setValue(self.scores[player][i + 9])
+                    score_spinbox_back.setFixedSize(30, 30)
+                    score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
+                    back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
