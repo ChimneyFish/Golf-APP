@@ -6,7 +6,7 @@ import serial
 
 port = "/dev/ttyAMA0"
 
-def gps_data():
+def get_gps_data():
     try:
         with serial.Serial(port, baudrate=9600, timeout=0.5) as ser:
             while True:
