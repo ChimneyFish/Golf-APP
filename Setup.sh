@@ -29,8 +29,8 @@ EOF
 
 # Backup and modify boot command line settings
 sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
-sudo tee /boot/cmdline.txt <<EOF
-dwc_otg.lpm_enable=0 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 
+sudo tee -a /boot/cmdline.txt <<EOF
+dwc_otg.lpm_enable=0 console=tty1 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
 EOF
 
@@ -60,6 +60,16 @@ Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
+EOF
+
+tee ~/.config/autostart/gps_server.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Exec=python3 /home/admin/Golf-APP/gps_server.py
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Golf GPS Server
 EOF
 
 # Reboot to apply changes

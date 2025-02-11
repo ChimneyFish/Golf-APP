@@ -3,6 +3,9 @@ import json
 import geopy.distance
 import serial
 import pynmea2
+import threading
+import time
+import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
@@ -10,8 +13,44 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QPalette, QColor
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
+
+
 data_file = "courses.json"
 club_data_file = "club_data.json"
+
+class GPSReader(QThread):
+    location_updated = pyqtSignal(float, float)
+
+    def __init__(self, port="/dev/ttyAMA0", baudrate=9600):
+        super().__init__()
+        self.port = port
+        self.baudrate = baudrate
+        self.running = True
+
+    def run(self):
+        try:
+            with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.5) as ser:
+                while self.running:
+                    try:
+                        newdata = ser.readline().decode("utf-8", errors="ignore").strip()
+                        if newdata.startswith("$GPRMC"):
+                            try:
+                                newmsg = pynmea2.parse(newdata)
+                                if newmsg.status == 'A':  # Data Valid
+                                    lat = newmsg.latitude
+                                    lng = newmsg.longitude
+                                    self.location_updated.emit(lat, lng)
+                            except pynmea2.ParseError:
+                                pass  # Ignore parsing errors
+                    except serial.SerialException as e:
+                        print(f"Serial error: {e}")
+                        break  # Exit loop on serial error
+        except serial.SerialException as e:
+            print(f"Unable to open serial port: {e}")
+
+    def stop(self):
+        self.running = False
+        self.wait()
 
 class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
@@ -62,40 +101,6 @@ class OnScreenKeyboard(QDialog):
     def get_text(self):
         return self.input_field.text()
 
-class GPSReader(QThread):
-    location_updated = pyqtSignal(float, float)
-
-    def __init__(self, port="/dev/ttyAMA0", baudrate=9600):
-        super().__init__()
-        self.port = port
-        self.baudrate = baudrate
-        self.running = True
-
-    def run(self):
-        try:
-            with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.5) as ser:
-                while self.running:
-                    try:
-                        newdata = ser.readline().decode("utf-8", errors="ignore").strip()
-                        if newdata.startswith("$GPRMC"):
-                            try:
-                                newmsg = pynmea2.parse(newdata)
-                                if newmsg.status == 'A':  # Data Valid
-                                    lat = newmsg.latitude
-                                    lng = newmsg.longitude
-                                    self.location_updated.emit(lat, lng)
-                            except pynmea2.ParseError:
-                                pass  # Ignore parsing errors
-                    except serial.SerialException as e:
-                        print(f"Serial error: {e}")
-                        break  # Exit loop on serial error
-        except serial.SerialException as e:
-            print(f"Unable to open serial port: {e}")
-
-    def stop(self):
-        self.running = False
-        self.wait()
-
 class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
@@ -112,13 +117,34 @@ class GolfRangeFinder(QWidget):
         self.course_data = {}  # To store tee and pin locations for courses
         self.club_distances = {}  # To store distances for each club
         self.selected_club = None
-
+        self.gps_server_url = "http://localhost:5000/gps"  # URL for GPS coordinates from server
         # Initialize GPS Reader Thread
+        self.current_location = None  # Store latest GPS coordinates
+        self.last_location = None  # Store previous GPS coordinates
         self.gps_reader = GPSReader()
         self.gps_reader.location_updated.connect(self.update_current_location)
         self.gps_reader.start()
+         # Start thread to update GPS coordinates from external server
+        self.external_gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates)
+        self.external_gps_thread.daemon = True
+        self.external_gps_thread.start()
 
         self.initUI()
+    
+    def fetch_external_gps_coordinates(self):
+        while True:
+            try:
+                response = requests.get(self.gps_server_url)
+                if response.status_code == 200:
+                    data = response.json()
+                    lat = data.get("latitude")
+                    lng = data.get("longitude")
+                    if lat is not None and lng is not None:
+                        self.location_updated.emit(lat, lng)
+            except Exception as e:
+                print(f"Error fetching GPS coordinates: {e}")
+
+            time.sleep(5)  # Fetch every 5 seconds
 
     def initUI(self):
         self.setAutoFillBackground(True)
@@ -244,6 +270,24 @@ class GolfRangeFinder(QWidget):
         save_button.clicked.connect(self.save_course_data)
         buttons_layout.addWidget(save_button)
         main_layout.addLayout(buttons_layout)
+    
+    def update_current_location(self, lat, lng):
+        self.current_location = (lat, lng)
+        self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
+        
+        if self.last_location:
+            distance = geopy.distance.geodesic(self.last_location, self.current_location).meters
+            self.distance_label.setText(f"Distance Traveled: {distance:.2f} m")
+        
+    def start_tracking(self):
+        self.last_location = self.current_location
+        self.distance_label.setText("Distance Traveled: 0.00 m")
+    
+    def stop_tracking(self):
+        self.last_location = None
+        self.distance_label.setText("Distance Traveled: N/A")
+    
+
     def create_score_grids(self):
         # Front 9
         self.front9_widget = QWidget()
@@ -337,8 +381,7 @@ class GolfRangeFinder(QWidget):
                     spinbox = layout.itemAtPosition(player + 1, i + 1).widget()
                     hole_index = i + (0 if index == 0 else 9)
                     spinbox.setValue(self.scores[player][hole_index])
-    def update_current_location(self, lat, lng):
-        self.current_location = (lat, lng)
+
     def get_gps_location(self):
         if self.current_location:
             return self.current_location
