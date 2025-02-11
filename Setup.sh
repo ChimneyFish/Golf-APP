@@ -44,12 +44,6 @@ sudo systemctl disable serial-getty@ttys0.service
 # Enable UART
 sudo systemctl enable serial-getty@ttys0.service
 
-# Create GPS reading script
-
-
-# Make GPS script executable
-
-
 # Set up autostart for Golf Range Finder GUI
 mkdir -p ~/.config/autostart
 tee ~/.config/autostart/golf_range_finder.desktop <<EOF
