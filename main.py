@@ -119,12 +119,12 @@ class GolfRangeFinder(QWidget):
         self.setLayout(main_layout)
 
         self.title_label = QLabel("Golf Scorecard & GPS Tracker", self)
-        self.title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
+        self.title_label.setFont(QFont("Arial", 20, QFont.Weight.italic))
         self.title_label.setStyleSheet("color: white;")
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         course_layout = QHBoxLayout()
-        course_layout.setSpacing(3)
+        course_layout.setSpacing(2)
 
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Course Name")
@@ -155,12 +155,12 @@ class GolfRangeFinder(QWidget):
 
         self.front9_button = QPushButton("Front 9")
         self.front9_button.setFont(QFont("Arial", 12))
-        self.front9_button.setFixedSize(80, 40)
+        self.front9_button.setFixedSize(60, 30)
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
         self.back9_button.setFont(QFont("Arial", 12))
-        self.back9_button.setFixedSize(80, 40)
+        self.back9_button.setFixedSize(60, 30)
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
 
         toggle_layout.addWidget(self.front9_button)
@@ -192,21 +192,21 @@ class GolfRangeFinder(QWidget):
 
         self.set_drive_start_btn = QPushButton("Start")
         self.set_drive_start_btn.setFont(QFont("Arial", 12))
-        self.set_drive_start_btn.setFixedSize(70, 40)
+        self.set_drive_start_btn.setFixedSize(60, 30)
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
         self.set_drive_start_btn.setToolTip("Set Drive Start")
         buttons_layout.addWidget(self.set_drive_start_btn)
 
         self.set_drive_end_btn = QPushButton("End")
         self.set_drive_end_btn.setFont(QFont("Arial", 12))
-        self.set_drive_end_btn.setFixedSize(70, 40)
+        self.set_drive_end_btn.setFixedSize(60, 30)
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
         self.set_drive_end_btn.setToolTip("Set Drive End")
         buttons_layout.addWidget(self.set_drive_end_btn)
 
         self.set_pin_btn = QPushButton("Pin")
         self.set_pin_btn.setFont(QFont("Arial", 12))
-        self.set_pin_btn.setFixedSize(70, 40)
+        self.set_pin_btn.setFixedSize(60, 30)
         self.set_pin_btn.clicked.connect(self.set_pin_location)
         self.set_pin_btn.setToolTip("Set Pin Location")
         buttons_layout.addWidget(self.set_pin_btn)
@@ -216,8 +216,8 @@ class GolfRangeFinder(QWidget):
                  "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
         self.club_selection.addItems(clubs)
         self.club_selection.setFont(QFont("Arial", 14))
-        self.club_selection.setFixedHeight(30)
-        self.club_selection.setFixedWidth(110)
+        self.club_selection.setFixedHeight(25)
+        self.club_selection.setFixedWidth(90)
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         buttons_layout.addWidget(self.club_selection)
         # Reset and Save Buttons
