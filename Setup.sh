@@ -9,7 +9,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt5 python3-pyqt5.qtwebengine
 
 # Install required Python libraries
-sudo pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
+pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
