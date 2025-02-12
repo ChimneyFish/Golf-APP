@@ -9,7 +9,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt5 python3-pyqt5.qtwebengine
 
 # Install required Python libraries
-pip3 install --user folium geopy requests pynmea2 PyQt6 gpsd-py3 pynmea2 pyserial  --break-system-packages
+sudo pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -19,7 +19,7 @@ sudo systemctl start gpsd
 echo "Configuring Raspberry Pi settings..."
 
 # Modify /boot/config.txt
-sudo tee -a /boot/config.txt <<EOF
+sudo tee -a /boot/firmware/config.txt <<EOF
 dtparam=spi=on
 dtoverlay=pi3-disable-bt
 core_freq=250
@@ -28,8 +28,8 @@ force_turbo=1
 EOF
 
 # Backup and modify boot command line settings
-sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
-sudo tee -a /boot/cmdline.txt <<EOF
+sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline_backup.txt
+sudo tee -a /boot/firmware/cmdline.txt <<EOF
 dwc_otg.lpm_enable=0 console=tty1 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
 EOF
@@ -46,7 +46,7 @@ sudo systemctl enable serial-getty@ttys0.service
 
 # Set up autostart for Golf Range Finder GUI
 mkdir -p ~/.config/autostart
-tee ~/.config/autostart/golf_range_finder.desktop <<EOF
+sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
 Exec=python3 /home/admin/Golf-APP/main.py
@@ -56,7 +56,7 @@ X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
 
-tee ~/.config/autostart/gps_server.desktop <<EOF
+sudo tee ~/.config/autostart/gps_server.desktop <<EOF
 [Desktop Entry]
 Type=Application
 Exec=python3 /home/admin/Golf-APP/gps_server.py
