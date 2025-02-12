@@ -20,7 +20,7 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(600, 500)  # Adjusted size
+        self.setFixedSize(600, 400)  # Adjusted size
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -71,7 +71,7 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFixedSize(1024, 600)
+        self.setFixedSize(1024, 500)
 
         self.scores = [[0] * 18 for _ in range(4)]  # Scores for 4 golfers
         self.drive_start = None
@@ -114,7 +114,7 @@ class GolfRangeFinder(QWidget):
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(3, 3, 3, 3)
+        main_layout.setContentsMargins(2, 2, 2, 2)
         main_layout.setSpacing(2)
         self.setLayout(main_layout)
 
@@ -129,7 +129,7 @@ class GolfRangeFinder(QWidget):
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Course Name")
         self.course_name_input.setFont(QFont("Arial", 14))
-        self.course_name_input.setFixedHeight(30)
+        self.course_name_input.setFixedHeight(25)
         self.course_name_input.mousePressEvent = self.show_keyboard
         course_layout.addWidget(self.course_name_input)
 
@@ -216,8 +216,8 @@ class GolfRangeFinder(QWidget):
                  "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"]
         self.club_selection.addItems(clubs)
         self.club_selection.setFont(QFont("Arial", 14))
-        self.club_selection.setFixedHeight(40)
-        self.club_selection.setFixedWidth(120)
+        self.club_selection.setFixedHeight(30)
+        self.club_selection.setFixedWidth(110)
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         buttons_layout.addWidget(self.club_selection)
         # Reset and Save Buttons
@@ -257,25 +257,25 @@ class GolfRangeFinder(QWidget):
         self.front9_widget = QWidget()
         front9_layout = QGridLayout()
         front9_layout.setSpacing(2)
-        front9_layout.setContentsMargins(4, 4, 4, 4)
+        front9_layout.setContentsMargins(1, 1, 1, 1)
         self.front9_widget.setLayout(front9_layout)
         # Back 9
         self.back9_widget = QWidget()
         back9_layout = QGridLayout()
-        back9_layout.setSpacing(2)
-        back9_layout.setContentsMargins(4, 4, 4, 4)
+        back9_layout.setSpacing(5)
+        back9_layout.setContentsMargins(1, 1, 1, 1)
         self.back9_widget.setLayout(back9_layout)
         self.score_stack.addWidget(self.front9_widget)
         self.score_stack.addWidget(self.back9_widget)
         for player in range(4):
             # Player Labels
             player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-            player_label_front.setStyleSheet("color: white;")
+            player_label_front.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+            player_label_front.setStyleSheet("color: black;")
             player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-            player_label_back.setStyleSheet("color: white;")
+            player_label_back.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+            player_label_back.setStyleSheet("color: yellow;")
             player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             front9_layout.addWidget(player_label_front, player + 1, 0)
             back9_layout.addWidget(player_label_back, player + 1, 0)
@@ -283,25 +283,25 @@ class GolfRangeFinder(QWidget):
                 # Front 9 Holes
                 if player == 0:
                     hole_label = QLabel(f"{i + 1}")
-                    hole_label.setFont(QFont("Arial", 14))
-                    hole_label.setStyleSheet("color: white;")
+                    hole_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+                    hole_label.setStyleSheet("color: black;")
                     front9_layout.addWidget(hole_label, 0, i + 1)
                 score_spinbox_front = QSpinBox()
                 score_spinbox_front.setRange(0, 10)
                 score_spinbox_front.setValue(self.scores[player][i])
-                score_spinbox_front.setFixedSize(60, 60)
+                score_spinbox_front.setFixedSize(50, 50)
                 score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
                 front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
                 # Back 9 Holes
                 if player == 0:
                     hole_label = QLabel(f"{i + 10}")
-                    hole_label.setFont(QFont("Arial", 14))
-                    hole_label.setStyleSheet("color: red;")
+                    hole_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+                    hole_label.setStyleSheet("color: black;")
                     back9_layout.addWidget(hole_label, 0, i + 1)
                 score_spinbox_back = QSpinBox()
                 score_spinbox_back.setRange(0, 10)
                 score_spinbox_back.setValue(self.scores[player][i + 9])
-                score_spinbox_back.setFixedSize(60, 60)
+                score_spinbox_back.setFixedSize(50, 50)
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
     def show_keyboard(self, event):
