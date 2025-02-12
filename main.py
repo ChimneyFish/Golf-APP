@@ -20,7 +20,7 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(500, 200)  # Adjusted size
+        self.setFixedSize(1024, 600)  # Adjusted size
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)

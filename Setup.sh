@@ -45,26 +45,43 @@ sudo systemctl disable serial-getty@ttys0.service
 sudo systemctl enable serial-getty@ttys0.service
 
 # Set up autostart for Golf Range Finder GUI
-mkdir -p ~/.config/autostart
-sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Exec=python3 /home/admin/Golf-APP/main.py
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Golf Range Finder
+
+sudo tee /etc/systemd/system/gps-server.service <<EOF                                               
+[Unit]
+Description=gps-server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/admin/Golf-APP/gps_server.py
+Restart=always
+User=root
+WorkingDirectory=/home/admin/Golf-APP
+StandardOutput=append:/var/log/gps_server.log
+StandardError=append:/var/log/gps_server.log
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-sudo tee ~/.config/autostart/gps_server.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Exec=python3 /home/admin/Golf-APP/gps_server.py
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Golf GPS Server
+sudo tee /etc/systemd/system/golf-app.service <<EOF
+[Unit]
+Description=Golf-APP
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/admin/Golf-APP/main.py
+Restart=always
+User=root
+WorkingDirectory=/home/admin/Golf-APP
+StandardOutput=append:/var/log/golf-app.log
+StandardError=append:/var/log/golf-app.log
+
+[Install]
+WantedBy=multi-user.target
 EOF
+
+sudo systemctl enable golf-app
+sudo systemctl enable gps-server
 
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
