@@ -1,5 +1,4 @@
 import serial
-import time
 import pynmea2
 
 port = "/dev/ttyAMA0"
@@ -19,4 +18,3 @@ while True:
     except serial.SerialException as e:
         print(f"Serial error: {e}")
     
-    time.sleep(1)
