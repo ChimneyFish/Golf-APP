@@ -111,7 +111,7 @@ class GolfRangeFinder(QWidget):
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setContentsMargins(7, 7, 7, 7)
         main_layout.setSpacing(10)
         self.setLayout(main_layout)
 
@@ -121,7 +121,7 @@ class GolfRangeFinder(QWidget):
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         course_layout = QHBoxLayout()
-        course_layout.setSpacing(5)
+        course_layout.setSpacing(4)
 
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Course Name")
@@ -150,17 +150,17 @@ class GolfRangeFinder(QWidget):
         self.create_score_grids()
 
         toggle_layout = QHBoxLayout()
-        toggle_layout.setSpacing(10)
+        toggle_layout.setSpacing(7)
 
         self.front9_button = QPushButton("Front 9")
         self.front9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
-        self.front9_button.setFixedSize(80, 80)
+        self.front9_button.setFixedSize(60, 60)
         self.front9_button.setStyleSheet("border-radius: 40px; background-color: #FFA500; color: #FFFFFF;")
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
         self.back9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
-        self.back9_button.setFixedSize(80, 80)
+        self.back9_button.setFixedSize(60, 60)
         self.back9_button.setStyleSheet("border-radius: 40px; background-color: #FFA500; color: #FFFFFF;")
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
 
@@ -189,7 +189,7 @@ class GolfRangeFinder(QWidget):
         main_layout.addLayout(gps_layout)
 
         buttons_layout = QHBoxLayout()
-        buttons_layout.setSpacing(10)
+        buttons_layout.setSpacing(8)
 
         self.set_drive_start_btn = QPushButton("Start")
         self.set_drive_start_btn.setFont(QFont("Helvetica", 12))
@@ -242,6 +242,22 @@ class GolfRangeFinder(QWidget):
         buttons_layout.addWidget(save_button)
 
         main_layout.addLayout(buttons_layout)
+    
+    def update_current_location(self, lat, lng):
+        self.current_location = (lat, lng)
+        self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
+        
+        if self.last_location:
+            distance = geopy.distance.geodesic(self.last_location, self.current_location).meters
+            self.distance_label.setText(f"Distance Traveled: {distance:.2f} m")
+        
+    def start_tracking(self):
+        self.last_location = self.current_location
+        self.distance_label.setText("Distance Traveled: 0.00 m")
+    
+    def stop_tracking(self):
+        self.last_location = None
+        self.distance_label.setText("Distance Traveled: N/A")
 
     def create_score_grids(self):
         # Front 9
@@ -266,11 +282,11 @@ class GolfRangeFinder(QWidget):
             player_label_front = QLabel(self.player_names[player])
             player_label_front.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
             player_label_front.setStyleSheet("color: white;")
-
+            player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             player_label_back = QLabel(self.player_names[player])
             player_label_back.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
             player_label_back.setStyleSheet("color: white;")
-
+            player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             front9_layout.addWidget(player_label_front, player + 1, 0)
             back9_layout.addWidget(player_label_back, player + 1, 0)
 
@@ -278,7 +294,7 @@ class GolfRangeFinder(QWidget):
                 # Front 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 1}")
-                    hole_label.setFont(QFont("Helvetica", 12))
+                    hole_label.setFont(QFont("Helvetica", 16))
                     hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
                     hole_label.clicked.connect(lambda _, h=i: self.set_pin_location(h))
                     front9_layout.addWidget(hole_label, 0, i + 1)
@@ -293,7 +309,7 @@ class GolfRangeFinder(QWidget):
                 # Back 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 10}")
-                    hole_label.setFont(QFont("Helvetica", 12))
+                    hole_label.setFont(QFont("Helvetica", 16))
                     hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
                     hole_label.clicked.connect(lambda _, h=i + 9: self.set_pin_location(h))
                     back9_layout.addWidget(hole_label, 0, i + 1)
@@ -351,9 +367,6 @@ class GolfRangeFinder(QWidget):
                     spinbox = layout.itemAtPosition(player + 1, i + 1).widget()
                     hole_index = i + (0 if index == 0 else 9)
                     spinbox.setValue(self.scores[player][hole_index])
-
-    def update_current_location(self, lat, lng):
-        self.current_location = (lat, lng)
 
     def get_gps_location(self):
         if self.current_location:
