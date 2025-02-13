@@ -3,14 +3,13 @@ import json
 import serial
 import pynmea2
 import geopy.distance
-import threading
 import time
-import requests
+import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
 )
-from PyQt5.QtGui import QFont, QPalette, QColor, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QPalette, QColor
 from PyQt5.QtCore import Qt, pyqtSignal
 
 data_file = "courses.json"
@@ -88,23 +87,23 @@ class GolfRangeFinder(QWidget):
 
     def fetch_external_gps_coordinates(self):
         port="/dev/ttyAMA0"
-        while True:
-            try:
-                with serial.Serial(port, baudrate=9600, timeout=0.5) as ser:
-                    newdata = ser.readline().decode("utf-8", errors="ignore").strip()
-                    if newdata.startswith("$GPRMC"):  # Removed unnecessary backslash
-                        try:
-                            newmsg = pynmea2.parse(newdata)
-                            lat = newmsg.latitude
-                            lng = newmsg.longitude
-                            if lat is not None and lng is not None:
-                                self.location_updated.emit(lat, lng)
-                        except pynmea2.ParseError:
-                            print("Error parsing GPS data")
-            except serial.SerialException:
+     
+        try:
+            with serial.Serial(port, baudrate=9600, timeout=0.5) as ser:
+                newdata = ser.readline().decode("utf-8", errors="ignore").strip()
+                if newdata.startswith("$GPRMC"):  # Removed unnecessary backslash
+                    try:
+                        newmsg = pynmea2.parse(newdata)
+                        lat = newmsg.latitude
+                        lng = newmsg.longitude
+                        if lat is not None and lng is not None:
+                            self.location_updated.emit(lat, lng)
+                            print(f"GPS Coordinates Updated: {lat}, {lng}")  # Debugging
+                    except pynmea2.ParseError:
+                        print("Error parsing GPS data")
+        finally:
+            time.sleep:(2)
         
-                time.sleep(2)
-
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = self.palette()
@@ -244,9 +243,15 @@ class GolfRangeFinder(QWidget):
 
         main_layout.addLayout(buttons_layout)
     
+    def start_gps_thread(self):
+        self.gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates, daemon=True)
+        self.gps_thread.start()
+
     def update_current_location(self, lat, lng):
+        print(f"Updating location on UI: {lat}, {lng}")  # Debugging
         self.current_location = (lat, lng)
         self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
+  
         
         if self.last_location:
             distance = geopy.distance.geodesic(self.last_location, self.current_location).meters
