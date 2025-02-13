@@ -18,7 +18,7 @@ class OnScreenKeyboard(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Keyboard")
-        self.setFixedSize(500, 200)
+        self.setFixedSize(600, 300)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -69,7 +69,7 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFixedSize(1024, 500)
+        self.setFixedSize(1024, 550)
 
         self.scores = [[0] * 18 for _ in range(4)]
         self.drive_start = None
@@ -264,11 +264,11 @@ class GolfRangeFinder(QWidget):
         for player in range(4):
             # Player Labels
             player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Helvetica", 10, QFont.Weight.Bold))
+            player_label_front.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
             player_label_front.setStyleSheet("color: white;")
 
             player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Helvetica", 10, QFont.Weight.Bold))
+            player_label_back.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
             player_label_back.setStyleSheet("color: white;")
 
             front9_layout.addWidget(player_label_front, player + 1, 0)
@@ -278,7 +278,7 @@ class GolfRangeFinder(QWidget):
                 # Front 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 1}")
-                    hole_label.setFont(QFont("Helvetica", 8))
+                    hole_label.setFont(QFont("Helvetica", 12))
                     hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
                     hole_label.clicked.connect(lambda _, h=i: self.set_pin_location(h))
                     front9_layout.addWidget(hole_label, 0, i + 1)
@@ -286,14 +286,14 @@ class GolfRangeFinder(QWidget):
                 score_spinbox_front = QSpinBox()
                 score_spinbox_front.setRange(0, 10)
                 score_spinbox_front.setValue(self.scores[player][i])
-                score_spinbox_front.setFixedSize(30, 30)
+                score_spinbox_front.setFixedSize(50, 50)
                 score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
                 front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
 
                 # Back 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 10}")
-                    hole_label.setFont(QFont("Helvetica", 8))
+                    hole_label.setFont(QFont("Helvetica", 12))
                     hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
                     hole_label.clicked.connect(lambda _, h=i + 9: self.set_pin_location(h))
                     back9_layout.addWidget(hole_label, 0, i + 1)
@@ -301,7 +301,7 @@ class GolfRangeFinder(QWidget):
                 score_spinbox_back = QSpinBox()
                 score_spinbox_back.setRange(0, 10)
                 score_spinbox_back.setValue(self.scores[player][i + 9])
-                score_spinbox_back.setFixedSize(30, 30)
+                score_spinbox_back.setFixedSize(50, 50)
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
