@@ -57,7 +57,7 @@ Name=Golf Range Finder
 EOF
 
 sudo chmod 666 /dev/ttyAMA0
-
+sudo usermod -a -G dialout $user
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
 wait 5

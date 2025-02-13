@@ -86,26 +86,32 @@ class GolfRangeFinder(QWidget):
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
-        port="/dev/ttyAMA0"
-
+        port = "/dev/ttyAMA0"
+        
         while True:
             try:
+                print("Attempting to open serial port...")  # Debugging
                 with serial.Serial(port, baudrate=9600, timeout=0.5) as ser:
+                    print("Serial port opened successfully.")  # Debugging
                     newdata = ser.readline().decode("utf-8", errors="ignore").strip()
-                    if newdata.startswith("$GPRMC"):  # Removed unnecessary backslash
+                    print(f"Raw GPS data: {newdata}")  # Debugging
+                    if newdata.startswith("$GPRMC"):
                         try:
                             newmsg = pynmea2.parse(newdata)
-                            lat = newmsg.latitude
-                            lng = newmsg.longitude
-                            if lat is not None and lng is not None:
-                                self.location_updated.emit(lat, lng)
-                                print(f"GPS Coordinates Updated: {lat}, {lng}")  # Debugging
+                            if newmsg.status == 'A':  # Data Valid
+                                lat = newmsg.latitude
+                                lng = newmsg.longitude
+                                if lat is not None and lng is not None:
+                                    self.location_updated.emit(lat, lng)
+                                    print(f"GPS Coordinates Updated: {lat}, {lng}")  # Debugging
+                            else:
+                                print("GPS data invalid.")  # Debugging
                         except pynmea2.ParseError:
                             print("Error parsing GPS data")
             except serial.SerialException as e:
                 print(f"Serial error: {e}")
-        
-        time.sleep(2)
+            
+            time.sleep(2)
 
         
     def initUI(self):
