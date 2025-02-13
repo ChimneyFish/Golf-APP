@@ -59,7 +59,7 @@ EOF
 sudo tee ~/.config/autostart/gps_server.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/admin/Golf-APP/gps_server.py
+Exec=sh /home/admin/Golf-APP/gps_server.sh
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
