@@ -105,7 +105,7 @@ class GolfRangeFinder(QWidget):
             except serial.SerialException as e:
                 print(f"Serial error: {e}")
         
-            time.sleep(2)
+        time.sleep(2)
 
         
     def initUI(self):
