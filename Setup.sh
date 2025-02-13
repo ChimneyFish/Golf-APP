@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
-
+wait 5
 # Update package list
 sudo apt update && sudo apt upgrade -y
 
@@ -17,7 +17,7 @@ sudo systemctl start gpsd
 
 # Configure Raspberry Pi settings
 echo "Configuring Raspberry Pi settings..."
-
+wait 5
 # Modify /boot/config.txt
 sudo tee -a /boot/firmware/config.txt <<EOF
 dtparam=spi=on
@@ -49,24 +49,16 @@ mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=python3 /home/admin/Golf-APP/main.py
+Exec=sh /home/admin/Golf-APP/main.sh
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
 
-sudo tee ~/.config/autostart/gps_server.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Exec=sh /home/admin/Golf-APP/gps_server.sh
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Golf GPS Server
-EOF
-
+sudo chmod 666 /dev/ttyAMA0
 
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
-
+wait 5
+sudo reboot
