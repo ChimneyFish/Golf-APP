@@ -84,12 +84,12 @@ class GolfRangeFinder(QWidget):
         self.gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates)
         self.gps_thread.daemon = True
         self.gps_thread.start()
-
+        self.location_updated.connect(self.update_current_location)
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
         port = "/dev/ttyAMA0"
-        
+    
         while True:
             try:
                 print("Attempting to open serial port...")  # Debugging
@@ -103,13 +103,16 @@ class GolfRangeFinder(QWidget):
                             if newmsg.status == 'A':  # Data Valid
                                 lat = newmsg.latitude
                                 lng = newmsg.longitude
+                                print(f"Parsed Latitude: {lat}, Longitude: {lng}")  # Debugging
                                 if lat is not None and lng is not None:
                                     self.location_updated.emit(lat, lng)
                                     print(f"GPS Coordinates Updated: {lat}, {lng}")  # Debugging
+                                else:
+                                   print("Parsed coordinates are None.")  # Debugging
                             else:
                                 print("GPS data invalid.")  # Debugging
-                        except pynmea2.ParseError:
-                            print("Error parsing GPS data")
+                        except pynmea2.ParseError as e:
+                            print(f"Parse error: {e}")  # Debugging
             except serial.SerialException as e:
                 print(f"Serial error: {e}")
             
@@ -121,7 +124,7 @@ class GolfRangeFinder(QWidget):
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(7, 7, 7, 7)
+        main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
         self.setLayout(main_layout)
 
@@ -347,10 +350,9 @@ class GolfRangeFinder(QWidget):
                     hole_index = i + (0 if index == 0 else 9)
                     spinbox.setValue(self.scores[player][hole_index])
 
-    def current_location(self, lat, lng):
-        print(f"Updating location on UI: {lat}, {lng}")  # Debugging
+    def update_current_location(self, lat, lng):
         self.current_location = (lat, lng)
-        self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
+        print(f"Current location updated to: {self.current_location}")  # Debugg
 
     def get_gps_location(self):
         if self.current_location:
