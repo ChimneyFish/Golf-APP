@@ -55,9 +55,9 @@ NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
-
+chmod +x /home/admin/Golf-APP/main_start.sh
 sudo chmod 666 /dev/ttyAMA0
-sudo usermod -a -G dialout $user
+sudo usermod -a -G dialout admin
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
 wait 5
