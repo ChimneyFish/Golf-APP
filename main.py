@@ -350,9 +350,9 @@ class GolfRangeFinder(QWidget):
                     hole_index = i + (0 if index == 0 else 9)
                     spinbox.setValue(self.scores[player][hole_index])
 
-    def update_current_location(self, lat, lng):
+    def current_location(self, lat, lng):
         print(f"Updating location on UI: {lat}, {lng}")  # Debugging
-        self.current_location = (lat, lng)
+        self.current_location = (self.fetch_external_gps_coordinates)
         #self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
 
     def get_gps_location(self):
