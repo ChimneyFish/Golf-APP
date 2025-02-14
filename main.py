@@ -3,7 +3,6 @@ import json
 import serial
 import pynmea2
 import geopy.distance
-import time
 import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
@@ -114,8 +113,6 @@ class GolfRangeFinder(QWidget):
             except serial.SerialException as e:
                 print(f"Serial error: {e}")
             
-            time.sleep(2)
-
         
     def initUI(self):
         self.setAutoFillBackground(True)
@@ -352,7 +349,7 @@ class GolfRangeFinder(QWidget):
 
     def current_location(self, lat, lng):
         print(f"Updating location on UI: {lat}, {lng}")  # Debugging
-        self.current_location = (self.fetch_external_gps_coordinates)
+        self.current_location = (self.fetch_external_gps_coordinates(lat, lng))
         #self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
 
     def get_gps_location(self):
