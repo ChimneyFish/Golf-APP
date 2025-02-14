@@ -349,8 +349,8 @@ class GolfRangeFinder(QWidget):
 
     def current_location(self, lat, lng):
         print(f"Updating location on UI: {lat}, {lng}")  # Debugging
-        self.current_location = (self.fetch_external_gps_coordinates(lat, lng))
-        #self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
+        self.current_location = (lat, lng)
+        self.gps_info_label.setText(f"Current Location: {lat:.6f}, {lng:.6f}")
 
     def get_gps_location(self):
         if self.current_location:
