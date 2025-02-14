@@ -43,7 +43,7 @@ class OnScreenKeyboard(QDialog):
             button = QPushButton(' ' if key == 'Space' else key)
             button.setFont(QFont("Arial", 14))
             button.setFixedSize(50, 50)
-            button.setStyleSheet("border-radius: 10px; background-color: #f2f2f2;")
+            button.setStyleSheet("border-radius: 10px; background-color: #000000; color: 9F0000")
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
             elif key == 'Back':
@@ -117,7 +117,7 @@ class GolfRangeFinder(QWidget):
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor("#2E8B57"))
+        palette.setColor(QPalette.Window, QColor("#02c006"))
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
@@ -138,7 +138,7 @@ class GolfRangeFinder(QWidget):
         self.course_name_input.setFont(QFont("Helvetica", 14))
         self.course_name_input.setFixedHeight(30)
         self.course_name_input.mousePressEvent = self.show_keyboard
-        self.course_name_input.setStyleSheet("background-color: #f2f2f2; padding: 5px;")
+        self.course_name_input.setStyleSheet("background-color: #f1f7f1; padding: 5px; color: #000100")
         course_layout.addWidget(self.course_name_input)
 
         self.load_course_dropdown = QComboBox(self)
@@ -146,7 +146,7 @@ class GolfRangeFinder(QWidget):
         self.load_course_dropdown.currentIndexChanged.connect(self.load_course_data)
         self.load_courses()
         self.load_course_dropdown.setFixedHeight(30)
-        self.load_course_dropdown.setStyleSheet("background-color: #f2f2f2;")
+        self.load_course_dropdown.setStyleSheet("background-color: #f1f7f1; color: #000100")
         course_layout.addWidget(self.load_course_dropdown)
 
         main_layout.addLayout(course_layout)
@@ -165,13 +165,13 @@ class GolfRangeFinder(QWidget):
         self.front9_button = QPushButton("Front 9")
         self.front9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
         self.front9_button.setFixedSize(60, 60)
-        self.front9_button.setStyleSheet("border-radius: 40px; background-color: #FFA500; color: #FFFFFF;")
+        self.front9_button.setStyleSheet("border-radius: 40px; background-color: #FFFFFF; color: #000000")
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
         self.back9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
         self.back9_button.setFixedSize(60, 60)
-        self.back9_button.setStyleSheet("border-radius: 40px; background-color: #FFA500; color: #FFFFFF;")
+        self.back9_button.setStyleSheet("border-radius: 40px; background-color: #FFFFFF; color: #000000")
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
 
         toggle_layout.addWidget(self.front9_button)
@@ -180,7 +180,7 @@ class GolfRangeFinder(QWidget):
 
         self.total_score_label = QLabel("Total Scores:")
         self.total_score_label.setFont(QFont("Helvetica", 16, QFont.Weight.Bold))
-        self.total_score_label.setStyleSheet("color: #FFFFFF;")
+        self.total_score_label.setStyleSheet("color: #000000;")
         main_layout.addWidget(self.total_score_label, alignment=Qt.AlignCenter)
 
         gps_layout = QHBoxLayout()
@@ -204,7 +204,7 @@ class GolfRangeFinder(QWidget):
         self.set_drive_start_btn = QPushButton("Start")
         self.set_drive_start_btn.setFont(QFont("Helvetica", 12))
         self.set_drive_start_btn.setFixedSize(60, 60)
-        self.set_drive_start_btn.setStyleSheet("border-radius: 30px; background-color: #FF4500; color: #FFFFFF;")
+        self.set_drive_start_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
         self.set_drive_start_btn.setToolTip("Set Drive Start")
         buttons_layout.addWidget(self.set_drive_start_btn)
@@ -212,7 +212,7 @@ class GolfRangeFinder(QWidget):
         self.set_drive_end_btn = QPushButton("End")
         self.set_drive_end_btn.setFont(QFont("Helvetica", 12))
         self.set_drive_end_btn.setFixedSize(60, 60)
-        self.set_drive_end_btn.setStyleSheet("border-radius: 30px; background-color: #FF4500; color: #FFFFFF;")
+        self.set_drive_end_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
         self.set_drive_end_btn.setToolTip("Set Drive End")
         buttons_layout.addWidget(self.set_drive_end_btn)
@@ -220,34 +220,34 @@ class GolfRangeFinder(QWidget):
         self.set_pin_btn = QPushButton("Pin")
         self.set_pin_btn.setFont(QFont("Helvetica", 12))
         self.set_pin_btn.setFixedSize(60, 60)
-        self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #FF4500; color: #FFFFFF;")
+        self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #585858; color: #a40202;")
         self.set_pin_btn.setToolTip("Set Pin Location")
         buttons_layout.addWidget(self.set_pin_btn)
 
         self.club_selection = QComboBox(self)
         clubs = [
-            "Select Club", "Driver", "3 Wood", "5 Wood", "Hybrid", "3 Iron", "4 Iron", "5 Iron",
+            "Select Club", "Driver 9.5", "Driver", "3 Wood", "5 Wood", "Hybrid", "3 Iron", "4 Iron", "5 Iron",
             "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"
         ]
         self.club_selection.addItems(clubs)
         self.club_selection.setFont(QFont("Helvetica", 12))
-        self.club_selection.setFixedHeight(30)
+        self.club_selection.setFixedHeight(35)
         self.club_selection.setFixedWidth(150)
-        self.club_selection.setStyleSheet("background-color: #f2f2f2; padding: 5px;")
+        self.club_selection.setStyleSheet("background-color: #000000; padding: 5px; color: #a40202")
         self.club_selection.currentIndexChanged.connect(self.set_selected_club)
         buttons_layout.addWidget(self.club_selection)
 
         reset_button = QPushButton("Reset")
         reset_button.setFont(QFont("Helvetica", 12))
         reset_button.setFixedSize(60, 60)
-        reset_button.setStyleSheet("border-radius: 30px; background-color: #FF0000; color: #FFFFFF;")
+        reset_button.setStyleSheet("border-radius: 30px; background-color: #f5f504; color: #0e5908;")
         reset_button.clicked.connect(self.reset_scores)
         buttons_layout.addWidget(reset_button)
 
         save_button = QPushButton("Save")
         save_button.setFont(QFont("Helvetica", 12))
         save_button.setFixedSize(60, 60)
-        save_button.setStyleSheet("border-radius: 30px; background-color: #32CD32; color: #FFFFFF;")
+        save_button.setStyleSheet("border-radius: 30px; background-color: #000000; color: #f50e04;")
         save_button.clicked.connect(self.save_course_data)
         buttons_layout.addWidget(save_button)
 
@@ -311,7 +311,7 @@ class GolfRangeFinder(QWidget):
                 if player == 0:
                     hole_label = QPushButton(f"{i + 1}")
                     hole_label.setFont(QFont("Helvetica", 16))
-                    hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
+                    hole_label.setStyleSheet("background-color: #111111; color: #0f6f25")
                     hole_label.clicked.connect(lambda _, h=i: self.set_pin_location(h))
                     front9_layout.addWidget(hole_label, 0, i + 1)
 
@@ -326,7 +326,7 @@ class GolfRangeFinder(QWidget):
                 if player == 0:
                     hole_label = QPushButton(f"{i + 10}")
                     hole_label.setFont(QFont("Helvetica", 16))
-                    hole_label.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")
+                    hole_label.setStyleSheet("background-color: #111111; color: #0f6f25")
                     hole_label.clicked.connect(lambda _, h=i + 9: self.set_pin_location(h))
                     back9_layout.addWidget(hole_label, 0, i + 1)
 
