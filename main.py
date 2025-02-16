@@ -29,7 +29,7 @@ class OnScreenKeyboard(QDialog):
         layout.addWidget(self.input_field)
 
         key_layout = QGridLayout()
-        key_layout.setSpacing(2)
+        key_layout.setSpacing(3)
 
         keys = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
@@ -42,7 +42,7 @@ class OnScreenKeyboard(QDialog):
             button = QPushButton(' ' if key == 'Space' else key)
             button.setFont(QFont("Arial", 14))
             button.setFixedSize(50, 50)
-            button.setStyleSheet("border-radius: 10px; background-color: #000000; color: 9F0000")
+            button.setStyleSheet("border-radius: 10px; background-color: #a7a7a7; color: #124d01")
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
             elif key == 'Back':
