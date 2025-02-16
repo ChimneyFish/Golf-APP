@@ -264,7 +264,7 @@ class GolfRangeFinder(QWidget):
             self.course_name_input.setText(keyboard.get_text())
 
     def create_score_grids(self):
-            # Front 9
+        # Front 9
         self.front9_widget = QWidget()
         front9_layout = QGridLayout()
         front9_layout.setSpacing(2)
@@ -325,6 +325,19 @@ class GolfRangeFinder(QWidget):
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
+    def show_keyboard_for_player(self, player):
+        keyboard = OnScreenKeyboard(self)
+        if keyboard.exec_() == QDialog.Accepted:
+            self.player_names[player] = keyboard.get_text()
+            self.update_player_labels()
+
+    def update_player_labels(self):
+        for player in range(4):
+            widget_front = self.front9_widget.layout().itemAtPosition(player + 1, 0).widget()
+            widget_back = self.back9_widget.layout().itemAtPosition(player + 1, 0).widget()
+            widget_front.setText(self.player_names[player])
+            widget_back.setText(self.player_names[player])
+
     def update_score(self, player, hole, value):
         self.scores[player][hole] = value
         total_scores = [sum(self.scores[p]) for p in range(4)]
@@ -333,7 +346,7 @@ class GolfRangeFinder(QWidget):
             f"{self.player_names[1]}: {total_scores[1]} | "
             f"{self.player_names[2]}: {total_scores[2]} | "
             f"{self.player_names[3]}: {total_scores[3]}"
-    )
+        )
 
     def reset_scores(self):
         for player in range(4):
@@ -354,7 +367,8 @@ class GolfRangeFinder(QWidget):
 
     def update_current_location(self, lat, lng):
         self.current_location = (lat, lng)
-        print(f"Current location updated to: {self.current_location}")  # Debugg
+        print(f"Current location updated to: {self.current_location}")  # Debugging
+        self.determine_current_hole()  # Determine the current hole based on updated location
 
     def get_gps_location(self):
         if self.current_location:
@@ -366,17 +380,37 @@ class GolfRangeFinder(QWidget):
         self.drive_start = self.get_gps_location()
         if self.drive_start:
             self.drive_label.setText("Drive Start Recorded")
+            print(f"Drive Start Set: {self.drive_start}")  # Debugging
+            self.store_tee_off_location()
         else:
             self.drive_label.setText("GPS Unavailable")
+            print("GPS Unavailable for Drive Start")  # Debugging
+
+    def set_drive_end(self):
+        self.drive_end = self.get_gps_location()
+        if self.drive_end and self.drive_start:
+            distance = geopy.distance.distance(self.drive_start, self.drive_end).meters
+            self.drive_label.setText(f"Drive Distance: {distance:.2f} m")
+            self.record_club_distance(distance)
+            print(f"Drive End Set: {self.drive_end}, Distance: {distance:.2f} m")  # Debugging
+        else:
+            self.drive_label.setText("Set Drive Start First or GPS Unavailable")
+            print("Drive Start or GPS Unavailable for Drive End")  # Debugging
+
+    def set_pin_location(self, hole):
+        pin_location = self.get_gps_location()
+        if pin_location:
+            self.pin_locations[hole] = pin_location
+            self.range_label.setText(f"Pin for Hole {hole + 1} Set")
+        else:
+            self.range_label.setText("GPS Unavailable")
 
     def store_tee_off_location(self):
         if self.current_location:
             self.tee_off_locations[self.current_hole] = self.current_location
             print(f"Tee-off location stored for hole {self.current_hole}: {self.current_location}")  # Debugging
         else:
-            print("GPS Unavailable for storing tee-off location")  
-
-
+            print("GPS Unavailable for storing tee-off location")  # Debugging
 
     def determine_current_hole(self):
         if not self.tee_off_locations or not self.current_location:
@@ -396,7 +430,7 @@ class GolfRangeFinder(QWidget):
             self.highlight_current_hole()
             print(f"Current hole determined to be: {self.current_hole}, Distance: {min_distance:.2f} m")  # Debugging
         else:
-            print("Could not determine the current hole") 
+            print("Could not determine the current hole")  # Debugging
 
     def highlight_current_hole(self):
         if self.current_hole is not None:
@@ -406,34 +440,13 @@ class GolfRangeFinder(QWidget):
                 if i == self.current_hole:
                     widget.setStyleSheet("background-color: #FFD700; color: #000000;")  # Highlight the current hole
                 else:
-                    widget.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")  
+                    widget.setStyleSheet("background-color: #111111; color: #0f6f25;")  # Default style
 
     def override_current_hole(self, hole):
         if 0 <= hole < 18:
             self.current_hole = hole
             self.highlight_current_hole()
-            print(f"Current hole manually overridden to: {self.current_hole}")  
-
-    def set_drive_end(self):
-        self.drive_end = self.get_gps_location()
-        if self.drive_end and self.drive_start:
-            distance = geopy.distance.distance(self.drive_start, self.drive_end).meters
-            self.drive_label.setText(f"Drive Distance: {distance:.2f} m")
-            self.record_club_distance(distance)
-        else:
-            self.drive_label.setText("Set Drive Start First or GPS Unavailable")
-    
-    def set_pin_location(self, hole):
-        pin_location = self.get_gps_location()
-        if pin_location:
-            self.pin_locations[hole] = pin_location
-            self.range_label.setText(f"Pin for Hole {hole + 1} Set")
-        else:
-            self.range_label.setText("GPS Unavailable")
-
-    def start_gps_thread(self):
-        self.gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates, daemon=True)
-        self.gps_thread.start()
+            print(f"Current hole manually overridden to: {self.current_hole}")  # Debugging
 
     def load_courses(self):
         try:
@@ -458,6 +471,7 @@ class GolfRangeFinder(QWidget):
                         self.course_name_input.setText(course_name)
                         self.drive_start = course.get('tee_location', None)
                         self.pin_locations = course.get('pin_locations', {})
+                        self.tee_off_locations = course.get('tee_off_locations', {})
                         if self.drive_start:
                             self.drive_label.setText("Drive Start Recorded")
                         else:
@@ -519,7 +533,6 @@ class GolfRangeFinder(QWidget):
         with open(club_data_file, 'w') as f:
             json.dump(self.club_distances, f, indent=4)
 
-
     def recommend_club(self, distance):
         club_recommendation = "No Data"
         closest_diff = float('inf')
@@ -535,7 +548,7 @@ class GolfRangeFinder(QWidget):
 
     def closeEvent(self, event):
         # Stop the external GPS fetching thread when the application is closed
-        self.external_gps_thread.join(0)
+        self.gps_thread.join(0)
         event.accept()
 
 if __name__ == "__main__":
