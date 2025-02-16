@@ -81,6 +81,8 @@ class GolfRangeFinder(QWidget):
         self.course_data = {}
         self.club_distances = {}
         self.selected_club = None
+        self.tee_off_locations = {}
+        self.current_hole = 0        
         self.gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates)
         self.gps_thread.daemon = True
         self.gps_thread.start()
@@ -367,6 +369,51 @@ class GolfRangeFinder(QWidget):
         else:
             self.drive_label.setText("GPS Unavailable")
 
+    def store_tee_off_location(self):
+        if self.current_location:
+            self.tee_off_locations[self.current_hole] = self.current_location
+            print(f"Tee-off location stored for hole {self.current_hole}: {self.current_location}")  # Debugging
+        else:
+            print("GPS Unavailable for storing tee-off location")  
+
+
+
+    def determine_current_hole(self):
+        if not self.tee_off_locations or not self.current_location:
+            return
+
+        closest_hole = None
+        min_distance = float('inf')
+
+        for hole, location in self.tee_off_locations.items():
+            distance = geopy.distance.distance(self.current_location, location).meters
+            if distance < min_distance:
+                min_distance = distance
+                closest_hole = hole
+
+        if closest_hole is not None:
+            self.current_hole = closest_hole
+            self.highlight_current_hole()
+            print(f"Current hole determined to be: {self.current_hole}, Distance: {min_distance:.2f} m")  # Debugging
+        else:
+            print("Could not determine the current hole") 
+
+    def highlight_current_hole(self):
+        if self.current_hole is not None:
+            # Highlight the current hole on the scorecard
+            for i in range(18):
+                widget = self.front9_widget.layout().itemAtPosition(0, i + 1).widget() if i < 9 else self.back9_widget.layout().itemAtPosition(0, i - 8).widget()
+                if i == self.current_hole:
+                    widget.setStyleSheet("background-color: #FFD700; color: #000000;")  # Highlight the current hole
+                else:
+                    widget.setStyleSheet("background-color: #FFA500; color: #FFFFFF;")  
+
+    def override_current_hole(self, hole):
+        if 0 <= hole < 18:
+            self.current_hole = hole
+            self.highlight_current_hole()
+            print(f"Current hole manually overridden to: {self.current_hole}")  
+
     def set_drive_end(self):
         self.drive_end = self.get_gps_location()
         if self.drive_end and self.drive_start:
@@ -430,7 +477,8 @@ class GolfRangeFinder(QWidget):
         course_info = {
             'course_name': self.course_name,
             'tee_location': self.drive_start,
-            'pin_locations': self.pin_locations
+            'pin_locations': self.pin_locations,
+            'tee_off_locations': self.tee_off_locations
         }
 
         try:
@@ -439,7 +487,7 @@ class GolfRangeFinder(QWidget):
         except FileNotFoundError:
             courses = []
 
-    # Remove any existing course with the same name
+        # Remove any existing course with the same name
         courses = [c for c in courses if c['course_name'] != self.course_name]
         courses.append(course_info)
 
@@ -453,7 +501,6 @@ class GolfRangeFinder(QWidget):
 
         self.title_label.setText(f"Course '{self.course_name}' Saved Successfully!")
         self.load_courses()
-
 
     def set_selected_club(self, index):
         if index == 0:
@@ -496,8 +543,3 @@ if __name__ == "__main__":
     window = GolfRangeFinder()
     window.show()
     sys.exit(app.exec_())
-
-
-
-
- 
