@@ -131,8 +131,8 @@ class GolfRangeFinder(QWidget):
         self.setLayout(main_layout)
 
         self.title_label = QLabel("Golf Scorecard & GPS Tracker", self)
-        self.title_label.setFont(QFont("Helvetica", 24, QFont.Weight.Bold))
-        self.title_label.setStyleSheet("color: #FFFFFF; text-align: center;")
+        self.title_label.setFont(QFont("Lobster", 24, QFont.Weight.Bold))
+        self.title_label.setStyleSheet("font-family: 'Lobster'; color: #FFFFFF; text-align: center;")
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         course_layout = QHBoxLayout()
