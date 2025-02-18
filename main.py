@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
 )
-from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtGui import QFont, QPalette, QPixmap, QBrush
 from PyQt5.QtCore import Qt, pyqtSignal
 
 data_file = "courses.json"
@@ -42,7 +42,7 @@ class OnScreenKeyboard(QDialog):
             button = QPushButton(' ' if key == 'Space' else key)
             button.setFont(QFont("Arial", 14))
             button.setFixedSize(50, 50)
-            button.setStyleSheet("border-radius: 10px; background-color: #a7a7a7; color: #124d01")
+            button.setStyleSheet("border-radius: 10px; background-color: #f20c0c; color: 9F0000")
             if key == 'Space':
                 button.clicked.connect(lambda checked: self.input_field.insert(' '))
             elif key == 'Back':
@@ -90,7 +90,7 @@ class GolfRangeFinder(QWidget):
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
-        port = "/dev/ttyAMA0"
+        port = "/dev/ttyACM0"
     
         while True:
             try:
@@ -120,19 +120,19 @@ class GolfRangeFinder(QWidget):
             
         
     def initUI(self):
-        self.setAutoFillBackground(True)
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor("#02c006"))
+        
+        palette = QPalette()
+        palette.setBrush(QPalette.Background, QBrush(QPixmap('/home/jackmehoff/Golf-APP/images/golf1.jpg')))
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(10)
+        main_layout.setSpacing(8)
         self.setLayout(main_layout)
 
-        self.title_label = QLabel("Golf Scorecard & GPS Tracker", self)
-        self.title_label.setFont(QFont("Lobster", 24, QFont.Weight.Bold))
-        self.title_label.setStyleSheet("font-family: 'Lobster'; color: #FFFFFF; text-align: center;")
+        self.title_label = QLabel("Golf AI Caddy", self)
+        self.title_label.setFont(QFont("Comic Sans MS", 35, QFont.Weight.Bold))
+        self.title_label.setStyleSheet("font-family: 'Comic Sans MS'; color: #FFFFFF; text-align: center;")
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         course_layout = QHBoxLayout()
@@ -140,7 +140,7 @@ class GolfRangeFinder(QWidget):
 
         self.course_name_input = QLineEdit(self)
         self.course_name_input.setPlaceholderText("Course Name")
-        self.course_name_input.setFont(QFont("Helvetica", 14))
+        self.course_name_input.setFont(QFont("Times New Roman", 14))
         self.course_name_input.setFixedHeight(30)
         self.course_name_input.mousePressEvent = self.show_keyboard
         self.course_name_input.setStyleSheet("background-color: #f1f7f1; padding: 5px; color: #000100")
@@ -148,6 +148,7 @@ class GolfRangeFinder(QWidget):
 
         self.load_course_dropdown = QComboBox(self)
         self.load_course_dropdown.addItem("Select Course")
+        self.load_course_dropdown.setFont(QFont("Times New Roman", 14))
         self.load_course_dropdown.currentIndexChanged.connect(self.load_course_data)
         self.load_courses()
         self.load_course_dropdown.setFixedHeight(30)
@@ -159,23 +160,25 @@ class GolfRangeFinder(QWidget):
         self.score_stack = QStackedWidget(self)
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("background: transparent")
         scroll_area.setWidget(self.score_stack)
         main_layout.addWidget(scroll_area)
-
+        self.score_stack.setFont(QFont("Comic Sans MS", 12))
+        self.score_stack.setStyleSheet("background: transparent;")
         self.create_score_grids()
 
         toggle_layout = QHBoxLayout()
         toggle_layout.setSpacing(7)
 
         self.front9_button = QPushButton("Front 9")
-        self.front9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
-        self.front9_button.setFixedSize(60, 60)
+        self.front9_button.setFont(QFont("Times New Roman", 12, QFont.Weight.Bold))
+        self.front9_button.setFixedSize(50, 50)
         self.front9_button.setStyleSheet("border-radius: 40px; background-color: #FFFFFF; color: #000000")
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
-        self.back9_button.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
-        self.back9_button.setFixedSize(60, 60)
+        self.back9_button.setFont(QFont("Times New Roman", 12, QFont.Weight.Bold))
+        self.back9_button.setFixedSize(50, 50)
         self.back9_button.setStyleSheet("border-radius: 40px; background-color: #FFFFFF; color: #000000")
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
 
@@ -184,7 +187,7 @@ class GolfRangeFinder(QWidget):
         main_layout.addLayout(toggle_layout)
 
         self.total_score_label = QLabel("Total Scores:")
-        self.total_score_label.setFont(QFont("Helvetica", 16, QFont.Weight.Bold))
+        self.total_score_label.setFont(QFont("Times New Roman", 16, QFont.Weight.Bold))
         self.total_score_label.setStyleSheet("color: #000000;")
         main_layout.addWidget(self.total_score_label, alignment=Qt.AlignCenter)
 
@@ -192,12 +195,12 @@ class GolfRangeFinder(QWidget):
         gps_layout.setSpacing(10)
 
         self.drive_label = QLabel("Drive Distance: N/A")
-        self.drive_label.setFont(QFont("Helvetica", 14))
+        self.drive_label.setFont(QFont("Times New Roman", 14))
         self.drive_label.setStyleSheet("color: #FFFFFF;")
         gps_layout.addWidget(self.drive_label)
 
         self.range_label = QLabel("Range to Pin: N/A")
-        self.range_label.setFont(QFont("Helvetica", 14))
+        self.range_label.setFont(QFont("Times New Roman", 14))
         self.range_label.setStyleSheet("color: #FFFFFF;")
         gps_layout.addWidget(self.range_label)
 
@@ -207,27 +210,35 @@ class GolfRangeFinder(QWidget):
         buttons_layout.setSpacing(8)
 
         self.set_drive_start_btn = QPushButton("Start")
-        self.set_drive_start_btn.setFont(QFont("Helvetica", 12))
-        self.set_drive_start_btn.setFixedSize(60, 60)
+        self.set_drive_start_btn.setFont(QFont("Times New Roman", 12))
+        self.set_drive_start_btn.setFixedSize(50, 50)
         self.set_drive_start_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
         self.set_drive_start_btn.setToolTip("Set Drive Start")
         buttons_layout.addWidget(self.set_drive_start_btn)
 
         self.set_drive_end_btn = QPushButton("End")
-        self.set_drive_end_btn.setFont(QFont("Helvetica", 12))
-        self.set_drive_end_btn.setFixedSize(60, 60)
+        self.set_drive_end_btn.setFont(QFont("Times New Roman", 12))
+        self.set_drive_end_btn.setFixedSize(50, 50)
         self.set_drive_end_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
         self.set_drive_end_btn.setToolTip("Set Drive End")
         buttons_layout.addWidget(self.set_drive_end_btn)
 
-        self.set_pin_btn = QPushButton("Pin")
-        self.set_pin_btn.setFont(QFont("Helvetica", 12))
-        self.set_pin_btn.setFixedSize(60, 60)
-        self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #585858; color: #a40202;")
+        self.set_pin_btn = QPushButton("Set Pin")
+        self.set_pin_btn.setFont(QFont("Times New Roman", 12))
+        self.set_pin_btn.setFixedSize(50, 50)
+        self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #ffffff;")
         self.set_pin_btn.setToolTip("Set Pin Location")
         buttons_layout.addWidget(self.set_pin_btn)
+
+        self.set_tee_off_location_btn = QPushButton("Set Tee-off Location")
+        self.set_tee_off_location_btn.setFont(QFont("Times New Roman", 12))
+        self.set_tee_off_location_btn.setFixedSize(130, 40)
+        self.set_tee_off_location_btn.setStyleSheet("background-color: #000000; color: #ffffff;")
+        self.set_tee_off_location_btn.clicked.connect(self.set_tee_off_location)
+        self.set_tee_off_location_btn.setToolTip("Set Tee-off Location")
+        buttons_layout.addWidget(self.set_tee_off_location_btn)
 
         self.club_selection = QComboBox(self)
         clubs = [
@@ -235,7 +246,7 @@ class GolfRangeFinder(QWidget):
             "6 Iron", "7 Iron", "8 Iron", "9 Iron", "Pitching Wedge", "Sand Wedge", "Lob Wedge", "Putter"
         ]
         self.club_selection.addItems(clubs)
-        self.club_selection.setFont(QFont("Helvetica", 12))
+        self.club_selection.setFont(QFont("Times New Roman", 12))
         self.club_selection.setFixedHeight(35)
         self.club_selection.setFixedWidth(150)
         self.club_selection.setStyleSheet("background-color: #000000; padding: 5px; color: #a40202")
@@ -243,15 +254,15 @@ class GolfRangeFinder(QWidget):
         buttons_layout.addWidget(self.club_selection)
 
         reset_button = QPushButton("Reset")
-        reset_button.setFont(QFont("Helvetica", 12))
-        reset_button.setFixedSize(60, 60)
+        reset_button.setFont(QFont("Times New Roman", 12))
+        reset_button.setFixedSize(50, 50)
         reset_button.setStyleSheet("border-radius: 30px; background-color: #f5f504; color: #0e5908;")
         reset_button.clicked.connect(self.reset_scores)
         buttons_layout.addWidget(reset_button)
 
         save_button = QPushButton("Save")
-        save_button.setFont(QFont("Helvetica", 12))
-        save_button.setFixedSize(60, 60)
+        save_button.setFont(QFont("Times New Roman", 12))
+        save_button.setFixedSize(50, 50)
         save_button.setStyleSheet("border-radius: 30px; background-color: #000000; color: #f50e04;")
         save_button.clicked.connect(self.save_course_data)
         buttons_layout.addWidget(save_button)
@@ -284,11 +295,11 @@ class GolfRangeFinder(QWidget):
         for player in range(4):
             # Player Labels
             player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
+            player_label_front.setFont(QFont("Times New Roman", 12, QFont.Weight.Bold))
             player_label_front.setStyleSheet("color: white;")
             player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Helvetica", 12, QFont.Weight.Bold))
+            player_label_back.setFont(QFont("Times New Roman", 12, QFont.Weight.Bold))
             player_label_back.setStyleSheet("color: white;")
             player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             front9_layout.addWidget(player_label_front, player + 1, 0)
@@ -298,31 +309,77 @@ class GolfRangeFinder(QWidget):
                 # Front 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 1}")
-                    hole_label.setFont(QFont("Helvetica", 16))
+                    hole_label.setFont(QFont("Times New Roman", 16, QFont.Weight.Bold))
                     hole_label.setStyleSheet("background-color: #111111; color: #0f6f25")
                     hole_label.clicked.connect(lambda _, h=i: self.set_pin_location(h))
                     front9_layout.addWidget(hole_label, 0, i + 1)
 
                 score_spinbox_front = QSpinBox()
+                score_spinbox_front.setFont(QFont("Comic Sans MS", 14, QFont.Weight.Bold ))
                 score_spinbox_front.setRange(0, 10)
                 score_spinbox_front.setValue(self.scores[player][i])
                 score_spinbox_front.setFixedSize(50, 50)
                 score_spinbox_front.valueChanged.connect(lambda value, p=player, h=i: self.update_score(p, h, value))
+                score_spinbox_front.setStyleSheet("""
+                    QSpinBox {
+                        background: transparent;
+                        color: black;
+                        border: 2px solid black;
+                    }
+                    QSpinBox::up-button, QSpinBox::down-button {
+                        background: transparent;
+                        border: white;
+                        color: black;  /* Color of the arrows */
+                    }
+                    QSpinBox::up-arrow {
+                        width: 10px;
+                        height: 10px;
+                        image: url('/home/jackmehoff/Golf-APP/images/uparrow.png');
+                    }
+                    QSpinBox::down-arrow {
+                        width: 10px;
+                        height: 10px;
+                        image: url('/home/jackmehoff/Golf-APP/images/downarrow.png');
+                    }
+                """)
                 front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
 
                 # Back 9 Holes
                 if player == 0:
                     hole_label = QPushButton(f"{i + 10}")
-                    hole_label.setFont(QFont("Helvetica", 16))
+                    hole_label.setFont(QFont("Times New Roman", 16, QFont.Weight.Bold))
                     hole_label.setStyleSheet("background-color: #111111; color: #0f6f25")
                     hole_label.clicked.connect(lambda _, h=i + 9: self.set_pin_location(h))
                     back9_layout.addWidget(hole_label, 0, i + 1)
 
                 score_spinbox_back = QSpinBox()
+                score_spinbox_back.setFont(QFont("Comic Sans MS", 14, QFont.Weight.Bold ))
                 score_spinbox_back.setRange(0, 10)
                 score_spinbox_back.setValue(self.scores[player][i + 9])
                 score_spinbox_back.setFixedSize(50, 50)
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
+                score_spinbox_back.setStyleSheet("""
+                    QSpinBox {
+                        background: transparent;
+                        color: white;
+                        border: 2px solid black;
+                    }
+                    QSpinBox::up-button, QSpinBox::down-button {
+                        background: transparent;
+                        border: black;
+                        color: black;  /* Color of the arrows */
+                    }
+                    QSpinBox::up-arrow {
+                        width: 10px;
+                        height: 10px;
+                        image: url('/home/jackmehoff/Golf-APP/images/uparrow.png');
+                    }
+                    QSpinBox::down-arrow {
+                        width: 10px;
+                        height: 10px;
+                        image: url('/home/jackmehoff/Golf-APP/images/downarrow.png');s
+                    }
+                """)
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
 
     def show_keyboard_for_player(self, player):
@@ -381,7 +438,6 @@ class GolfRangeFinder(QWidget):
         if self.drive_start:
             self.drive_label.setText("Drive Start Recorded")
             print(f"Drive Start Set: {self.drive_start}")  # Debugging
-            self.store_tee_off_location()
         else:
             self.drive_label.setText("GPS Unavailable")
             print("GPS Unavailable for Drive Start")  # Debugging
@@ -402,6 +458,15 @@ class GolfRangeFinder(QWidget):
         if pin_location:
             self.pin_locations[hole] = pin_location
             self.range_label.setText(f"Pin for Hole {hole + 1} Set")
+        else:
+            self.range_label.setText("GPS Unavailable")
+    
+    def set_tee_off_location(self, hole):
+        tee_off_location = self.get_gps_location()
+        if tee_off_location:
+            self.tee_off_location[hole] = tee_off_location
+            self.range_label.setText(f"tee_off_location for Hole {hole + 1} Set")
+            self.store_tee_off_location()
         else:
             self.range_label.setText("GPS Unavailable")
 
