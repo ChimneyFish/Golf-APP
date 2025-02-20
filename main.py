@@ -90,7 +90,7 @@ class GolfRangeFinder(QWidget):
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
-        port = "/dev/ttyACM0"
+        port = "/dev/ttyAMA0"
     
         while True:
             try:
@@ -617,6 +617,12 @@ class GolfRangeFinder(QWidget):
 
         return club_recommendation
 
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
     def closeEvent(self, event):
         # Stop the external GPS fetching thread when the application is closed
         self.gps_thread.join(0)
@@ -625,5 +631,5 @@ class GolfRangeFinder(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = GolfRangeFinder()
-    window.show()
+    window.showFullScreen()
     sys.exit(app.exec_())
