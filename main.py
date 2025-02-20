@@ -90,7 +90,7 @@ class GolfRangeFinder(QWidget):
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
-        port = "/dev/ttyACM1"
+        port = "/dev/ttyACM0"
     
         while True:
             try:
@@ -120,7 +120,7 @@ class GolfRangeFinder(QWidget):
             
         
     def initUI(self):
-        
+        self.setAutoFillBackground(True)
         palette = QPalette()
         palette.setBrush(QPalette.Background, QBrush(QPixmap('/home/jackmehoff/Golf-APP/images/golf1.jpg')))
         self.setPalette(palette)
@@ -311,7 +311,7 @@ class GolfRangeFinder(QWidget):
                     hole_label = QPushButton(f"{i + 1}")
                     hole_label.setFont(QFont("Bookman", 16, QFont.Weight.Bold))
                     hole_label.setStyleSheet("background-color: #000000; color: #00de05")
-                    hole_label.clicked.connect(lambda _, h=i: self.set_pin_location(h))
+                    hole_label.clicked.connect(lambda _, h=i: self.set_current_hole(h))
                     front9_layout.addWidget(hole_label, 0, i + 1)
 
                 score_spinbox_front = QSpinBox()
@@ -349,7 +349,7 @@ class GolfRangeFinder(QWidget):
                     hole_label = QPushButton(f"{i + 10}")
                     hole_label.setFont(QFont("Bookman", 16, QFont.Weight.ExtraBold))
                     hole_label.setStyleSheet("background-color: #000000; color: #00de05")
-                    hole_label.clicked.connect(lambda _, h=i + 9: self.set_pin_location(h))
+                    hole_label.clicked.connect(lambda _, h=i + 9: self.set_current_hole(h))
                     back9_layout.addWidget(hole_label, 0, i + 1)
 
                 score_spinbox_back = QSpinBox()
@@ -506,6 +506,12 @@ class GolfRangeFinder(QWidget):
                     widget.setStyleSheet("background-color: #FFD700; color: #000000;")  # Highlight the current hole
                 else:
                     widget.setStyleSheet("background-color: #111111; color: #0f6f25;")  # Default style
+
+    def set_current_hole(self, hole):
+        if 0 <= hole < 18:
+            self.current_hole = hole
+            self.highlight_current_hole()
+            print(f"Current hole manually overridden to: {self.current_hole}")  # Debugging
 
     def override_current_hole(self, hole):
         if 0 <= hole < 18:
