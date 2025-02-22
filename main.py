@@ -160,24 +160,24 @@ class GolfRangeFinder(QWidget):
         self.score_stack = QStackedWidget(self)
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("background: transparent")
+        scroll_area.setStyleSheet("background-color: rgba(0, 255, 0, 0.08);")
         scroll_area.setWidget(self.score_stack)
         main_layout.addWidget(scroll_area)
         self.score_stack.setFont(QFont("Comic Sans MS", 14))
-        self.score_stack.setStyleSheet("background: transparent; color: #0b0083")
+        self.score_stack.setStyleSheet("background-color: rgba(0, 255, 0, 0.08);")
         self.create_score_grids()
 
         toggle_layout = QHBoxLayout()
-        toggle_layout.setSpacing(10)
+        toggle_layout.setSpacing(9)
 
         self.front9_button = QPushButton("Front 9")
-        self.front9_button.setFont(QFont("Bookman", 8, QFont.Weight.Bold))
+        self.front9_button.setFont(QFont("Bookman", 10, QFont.Weight.Bold))
         self.front9_button.setFixedSize(50, 50)
         self.front9_button.setStyleSheet("border-radius: 40px; background-color: #000000; color: #FFFFFF")
         self.front9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(0))
 
         self.back9_button = QPushButton("Back 9")
-        self.back9_button.setFont(QFont("Bookman", 8, QFont.Weight.Bold))
+        self.back9_button.setFont(QFont("Bookman", 10, QFont.Weight.Bold))
         self.back9_button.setFixedSize(50, 50)
         self.back9_button.setStyleSheet("border-radius: 40px; background-color: #000000; color: #FFFFFF")
         self.back9_button.clicked.connect(lambda: self.score_stack.setCurrentIndex(1))
@@ -187,9 +187,9 @@ class GolfRangeFinder(QWidget):
         main_layout.addLayout(toggle_layout)
 
         self.total_score_label = QLabel("Total Scores:")
-        self.total_score_label.setFont(QFont("Bookman", 16, QFont.Weight.Bold))
+        self.total_score_label.setFont(QFont("Bookman", 14, QFont.Weight.Bold))
         self.total_score_label.setStyleSheet("color: #000000;")
-        main_layout.addWidget(self.total_score_label, alignment=Qt.AlignCenter)
+        main_layout.addWidget(self.total_score_label, alignment=Qt.AlignLeft)
 
         gps_layout = QHBoxLayout()
         gps_layout.setSpacing(7)
@@ -211,7 +211,7 @@ class GolfRangeFinder(QWidget):
 
         self.set_drive_start_btn = QPushButton("Start")
         self.set_drive_start_btn.setFont(QFont("Bookman", 10))
-        self.set_drive_start_btn.setFixedSize(30, 30)
+        self.set_drive_start_btn.setFixedSize(50, 30)
         self.set_drive_start_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_start_btn.clicked.connect(self.set_drive_start)
         self.set_drive_start_btn.setToolTip("Set Drive Start")
@@ -219,7 +219,7 @@ class GolfRangeFinder(QWidget):
 
         self.set_drive_end_btn = QPushButton("End")
         self.set_drive_end_btn.setFont(QFont("Bookman", 10))
-        self.set_drive_end_btn.setFixedSize(30, 30)
+        self.set_drive_end_btn.setFixedSize(40, 30)
         self.set_drive_end_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #FFFFFF;")
         self.set_drive_end_btn.clicked.connect(self.set_drive_end)
         self.set_drive_end_btn.setToolTip("Set Drive End")
@@ -227,7 +227,7 @@ class GolfRangeFinder(QWidget):
 
         self.set_pin_btn = QPushButton("Set Pin")
         self.set_pin_btn.setFont(QFont("Bookman", 10))
-        self.set_pin_btn.setFixedSize(50, 30)
+        self.set_pin_btn.setFixedSize(60, 30)
         self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #ffffff;")
         self.set_pin_btn.setToolTip("Set Pin Location")
         buttons_layout.addWidget(self.set_pin_btn)
