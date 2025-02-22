@@ -72,7 +72,8 @@ sudo chmod 644 /etc/systemd/system/golf_range_finder.service
 sudo systemctl daemon-reload
 sudo systemctl enable golf_range_finder.service
 sudo systemctl start golf_range_finder.service
-
+pip3 install nicetouch --break-system-packages
+sudo python3 ./setup installl
 # Reboot to apply changes
 echo "Setup complete. Rebooting now..."
 sleep 5
