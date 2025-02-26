@@ -122,7 +122,7 @@ class GolfRangeFinder(QWidget):
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = QPalette()
-        palette.setBrush(QPalette.Background, QBrush(QPixmap('/home/jackmehoff/Golf-APP/images/golf1.jpg')))
+        palette.setBrush(QPalette.Background, QBrush(QPixmap('/home/admin/Golf-APP/images/golf1.jpg')))
         self.setPalette(palette)
 
         main_layout = QVBoxLayout()
@@ -334,12 +334,12 @@ class GolfRangeFinder(QWidget):
                     QSpinBox::up-arrow {
                         width: 10px;
                         height: 10px;
-                        image: url('/home/jackmehoff/Golf-APP/images/uparrow.png');
+                        image: url('/home/admin/Golf-APP/images/uparrow.png');
                     }
                     QSpinBox::down-arrow {
                         width: 10px;
                         height: 10px;
-                        image: url('/home/jackmehoff/Golf-APP/images/downarrow.png');
+                        image: url('/home/admin/Golf-APP/images/downarrow.png');
                     }
                 """)
                 front9_layout.addWidget(score_spinbox_front, player + 1, i + 1)
