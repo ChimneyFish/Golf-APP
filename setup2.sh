@@ -22,7 +22,7 @@ echo "Configuring Raspberry Pi settings..."
 sleep 5
 
 # Modify /boot/config.txt
-sudo tee -a /boot/config.txt <<EOF
+sudo tee -a /boot/firmware/config.txt <<EOF
 dtparam=spi=on
 dtoverlay=pi3-disable-bt
 core_freq=250
@@ -31,7 +31,7 @@ force_turbo=1
 EOF
 
 # Backup and modify boot command line settings
-sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
+sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline_backup.txt
 sudo tee -a /boot/cmdline.txt <<EOF
 dwc_otg.lpm_enable=0 console=tty1 rootfstype=ext4 
 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
@@ -72,8 +72,7 @@ sudo chmod 644 /etc/systemd/system/golf_range_finder.service
 sudo systemctl daemon-reload
 sudo systemctl enable golf_range_finder.service
 sudo systemctl start golf_range_finder.service
-pip3 install nicetouch --break-system-packages
-sudo python3 ./setup installl
+
 # Reboot to apply changes
 echo "Setup complete. Rebooting now..."
 sleep 5
