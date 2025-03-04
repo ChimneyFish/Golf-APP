@@ -69,8 +69,7 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFixedSize(1024, 550)
-
+        self.setFullScreen()
         self.scores = [[0] * 18 for _ in range(4)]
         self.drive_start = None
         self.drive_end = None
@@ -131,8 +130,8 @@ class GolfRangeFinder(QWidget):
         self.setLayout(main_layout)
 
         self.title_label = QLabel("AI Caddy", self)
-        self.title_label.setFont(QFont("Comic Sans MS", 38, QFont.Weight.ExtraBold))
-        self.title_label.setStyleSheet("font-family: 'Comic Sans MS'; color: #00de05; text-align: center;")
+        self.title_label.setFont(QFont("Comic Sans MS", 42, QFont.Weight.ExtraBold))
+        self.title_label.setStyleSheet("font-family: 'Comic Sans MS'; color: #00910f; text-align: center;")
         main_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         course_layout = QHBoxLayout()
@@ -160,11 +159,11 @@ class GolfRangeFinder(QWidget):
         self.score_stack = QStackedWidget(self)
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("background-color: rgba(0, 255, 0, 0.08);")
+        scroll_area.setStyleSheet("background-color: rgba(0, 255, 0, 0.05);")
         scroll_area.setWidget(self.score_stack)
         main_layout.addWidget(scroll_area)
         self.score_stack.setFont(QFont("Comic Sans MS", 14))
-        self.score_stack.setStyleSheet("background-color: rgba(0, 255, 0, 0.08);")
+        self.score_stack.setStyleSheet("background-color: rgba(0, 255, 0, 0.05);")
         self.create_score_grids()
 
         toggle_layout = QHBoxLayout()
@@ -295,11 +294,11 @@ class GolfRangeFinder(QWidget):
         for player in range(4):
             # Player Labels
             player_label_front = QLabel(self.player_names[player])
-            player_label_front.setFont(QFont("Bookman", 12, QFont.Weight.Bold))
+            player_label_front.setFont(QFont("Bookman", 14, QFont.Weight.ExtraBold))
             player_label_front.setStyleSheet("color: Black;")
             player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             player_label_back = QLabel(self.player_names[player])
-            player_label_back.setFont(QFont("Bookman", 12, QFont.Weight.Bold))
+            player_label_back.setFont(QFont("Bookman", 14, QFont.Weight.ExtraBold))
             player_label_back.setStyleSheet("color: Black;")
             player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
             front9_layout.addWidget(player_label_front, player + 1, 0)
