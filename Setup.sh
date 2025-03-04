@@ -48,7 +48,7 @@ mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=sudo python3 /home/admin/Golf-APP/main.py
+Exec=python3 /home/admin/Golf-APP/main.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -59,10 +59,11 @@ EOF
 chmod +x ~/.config/autostart/golf_range_finder.desktop
 
 # Additional setup
-chmod +x /home/admin/Golf-APP/main_start.sh
 sudo chmod 666 /dev/ttyAMA0
 sudo usermod -a -G dialout admin
-
+sudo usermod -a -G tty admin
+sudo usermod -a -G root admin
+sudo usermod -a -G ttyS0 admin
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
 sleep 5
