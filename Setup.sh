@@ -49,7 +49,7 @@ mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=sh /home/admin/Golf-APP/main_start.sh
+Exec=sudo python3 /home/admin/Golf-APP/main.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
