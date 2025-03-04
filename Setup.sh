@@ -56,8 +56,8 @@ X-GNOME-Autostart-enabled=true
 Name=Golf Range Finder
 EOF
 chmod +x /home/admin/Golf-APP/main_start.sh
-sudo chmod 666 /dev/ttyAMA0
 sudo usermod -a -G dialout admin
+chmod +x ~/.config/autostart/golf_range_finder.desktop
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
 sleep 5
