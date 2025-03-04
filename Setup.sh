@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
-wait 5
+sleep 5
 # Update package list
 sudo apt update && sudo apt upgrade -y
 
@@ -17,7 +17,7 @@ sudo systemctl start gpsd
 
 # Configure Raspberry Pi settings
 echo "Configuring Raspberry Pi settings..."
-wait 5
+sleep 5
 # Modify /boot/config.txt
 sudo tee -a /boot/firmware/config.txt <<EOF
 dtparam=spi=on
@@ -60,5 +60,5 @@ sudo chmod 666 /dev/ttyAMA0
 sudo usermod -a -G dialout admin
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
-wait 5
+sleep 5
 sudo reboot
