@@ -9,7 +9,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y gpsd gpsd-clients python3-gps minicom python3-pyqt5 python3-pyqt5.qtwebengine
 
 # Install required Python libraries
-sudo pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
+sudo pip3 install folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 # Enable and start GPS daemon
 sudo systemctl enable gpsd
@@ -30,8 +30,7 @@ EOF
 # Backup and modify boot command line settings
 sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline_backup.txt
 sudo tee -a /boot/firmware/cmdline.txt <<EOF
-dwc_otg.lpm_enable=0 console=tty1 rootfstype=ext4 
-elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
+dwc_otg.lpm_enable=0 elevator=deadline fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles
 EOF
 
 # Disable serial console services
@@ -49,7 +48,7 @@ mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
 [Desktop Entry]
 Type=Application
-Exec=sudo python3 /home/admin/Golf-APP/main.py
+Exec=sudo python3 ~/Golf-APP/main.py
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
