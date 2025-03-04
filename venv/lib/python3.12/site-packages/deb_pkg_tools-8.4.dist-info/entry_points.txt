@@ -1,3 +1,0 @@
-[console_scripts]
-deb-pkg-tools = deb_pkg_tools.cli:main
-
