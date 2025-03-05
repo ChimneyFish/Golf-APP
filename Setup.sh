@@ -2,6 +2,26 @@
 
 echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
 sleep 5
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if id "admin" &>/dev/null; then
+    echo "User 'admin' exists."
+else
+    echo "User 'admin' does not exist. Creating user 'admin'...Password is 'admin'"
+    sudo adduser --disabled-password --gecos "" admin
+    echo "admin:admin" | sudo chpasswd
+    sudo usermod -aG sudo admin
+fi
+
+if [ ! -d "/home/admin/Golf-APP" ]; then
+    echo "Moving Golf-APP repository to /home/admin/Golf-APP"
+    sudo mkdir -p /home/admin/Golf-APP
+    sudo mv "$DIR"/* /home/admin/Golf-APP/
+    sudo chown -R admin:admin /home/admin/Golf-APP
+else
+    echo "Golf-APP directory already exists in /home/admin/"
+fi
 # Update package list
 sudo apt update && sudo apt upgrade -y
 
@@ -45,7 +65,7 @@ sudo systemctl disable serial-getty@ttys0.service
 sudo systemctl enable serial-getty@ttys0.service
 
 # Set up autostart for Golf Range Finder GUI
-mkdir -p ~/.config/autostart
+sudo mkdir -p ~/.config/autostart
 sudo tee ~/.config/autostart/golf-app.desktop <<EOF
 [Desktop Entry]
 Type=Application
@@ -65,7 +85,7 @@ sudo chown admin:admin /dev/ttyAMA0
 
 # Ensure the .desktop file has the correct permissions
 sudo chmod 644 ~/.config/autostart/golf-app.desktop
-# Additional setup
+
 
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
