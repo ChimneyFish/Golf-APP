@@ -47,6 +47,18 @@ sudo systemctl disable serial-getty@ttys0.service
 # Enable UART
 sudo systemctl enable serial-getty@ttyS0.service
 
+mkdir -p ~/.config/autostart
+sudo tee ~/.config/autostart/golf-app.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Name=Golf Range Finder
+Exec=/usr/bin/python3 /home/admin/Golf-APP/main.py
+Icon=/home/admin/Golf-APP/icon.png
+Comment=Start Golf Range Finder & Scorekeeper
+X-GNOME-Autostart-enabled=true
+Terminal=false
+EOF
+
 # Set up systemd service for Golf Range Finder GUI
 sudo tee /etc/systemd/system/golf_range_finder.service <<EOF
 [Unit]
@@ -62,16 +74,18 @@ Restart=always
 User=root
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
 EOF
+
+sudo usermod -aG dialout admin
+sudo chown admin:admin /dev/ttyAMA0
 
 # Set correct permissions for the service file
 sudo chmod 644 /etc/systemd/system/golf_range_finder.service
 
 # Enable and start the service
-sudo systemctl daemon-reload
-sudo systemctl enable golf_range_finder.service
-sudo systemctl start golf_range_finder.service
+
+
 
 # Reboot to apply changes
 echo "Setup complete. Rebooting now..."
