@@ -44,26 +44,40 @@ sudo systemctl disable serial-getty@ttys0.service
 sudo systemctl enable serial-getty@ttys0.service
 
 # Set up autostart for Golf Range Finder GUI
-mkdir -p ~/.config/autostart
-sudo tee ~/.config/autostart/golf_range_finder.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Exec=/bin/python3 /home/admin/Golf-APP/main.py
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Golf Range Finder
+
+sudo tee /etc/systemd/system/golf-app.service: <<EOF
+[Unit]
+Description=Golf Range Finder & Scorekeeper
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/admin/Golf-APP/main.py
+WorkingDirectory=/home/admin/Golf-APP
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/root/.Xauthority
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-# Ensure the .desktop file has the correct permissions
-chmod +x ~/.config/autostart/golf_range_finder.desktop
+sudo tee -a /root/.xinitrc <<EOF
+#!/bin/sh
+exec /usr/bin/python3 /home/admin/Golf-APP/main.py
+EOF
 
+sudo chmod +x /root/.xinitrc
+sudo systemctl set-default graphical.target
+
+
+# Ensure the .desktop file has the correct permissions
+sudo systemctl enable golf-app.service
+sudo systemctl start golf-app.service
 # Additional setup
-sudo chmod 666 /dev/ttyAMA0
-sudo usermod -a -G dialout admin
-sudo usermod -a -G tty admin
-sudo usermod -a -G root admin
-sudo usermod -a -G ttyS0 admin
+
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
 sleep 5
