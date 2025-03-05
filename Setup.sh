@@ -45,7 +45,7 @@ sudo systemctl enable serial-getty@ttys0.service
 
 # Set up autostart for Golf Range Finder GUI
 
-sudo tee /etc/systemd/system/golf-app.service: <<EOF
+sudo tee /etc/systemd/system/golf-app.service <<EOF
 [Unit]
 Description=Golf Range Finder & Scorekeeper
 After=network.target
