@@ -69,7 +69,7 @@ class GolfRangeFinder(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Golf Range Finder & Scorekeeper")
-        self.setFullScreen()
+        self.showFullScreen()
         self.scores = [[0] * 18 for _ in range(4)]
         self.drive_start = None
         self.drive_end = None
