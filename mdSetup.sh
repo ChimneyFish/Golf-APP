@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Setting up Raspberry Pi for Golf Range Finder & Scorekeeper..."
+echo "Setting up Raspberry Pi for AI-Caddy with minimal Desktop for better performance..."
 sleep 5
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,9 +26,10 @@ fi
 sudo apt update && sudo apt upgrade -y
 
 # Install required system packages
-sudo apt install -y python3-pip  gpsd gpsd-clients python3-gps minicom python3-pyqt5 python3-pyqt5.qtwebengine
+sudo apt install -y python3-pip xserver-xorg gpsd gpsd-clients python3-gps minicom python3-pyqt5 python3-pyqt5.qtwebengine
+sudo apt install xserver-xorg-input-mutouch xserver-xorg-input-evdev  xserver-xorg-input-multitouch xserver-xorg-dev x11-xserver-utils
+sudo aot install openbox xorg
 
-# Install required Python libraries
 sudo pip3 install folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 pip3 install --user folium geopy requests pynmea2 PyQt5 gpsd-py3 pynmea2 pyserial  --break-system-packages
 # Enable and start GPS daemon
@@ -64,30 +65,29 @@ sudo systemctl disable serial-getty@ttys0.service
 # Enable UART
 sudo systemctl enable serial-getty@ttys0.service
 
-# Set up autostart for Golf Range Finder GUI
-sudo mkdir -p ~/.config/autostart
-sudo tee ~/.config/autostart/golf-app.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Name=Golf Range Finder
-Exec=/usr/bin/python3 /home/admin/Golf-APP/main.py
-Icon=/home/admin/Golf-APP/icon.png
-Comment=Start Golf Range Finder & Scorekeeper
-X-GNOME-Autostart-enabled=true
-Terminal=false
-EOF
-
-#give the proper permissions to the user and change the owner of AMA0
 sudo usermod -aG dialout admin
 sudo usermod -aG tty admin
 sudo chown admin:admin /dev/ttyAMA0
 
+#set up Minimal Desktop for Application
+sudo apt install lightdm openbox
+sudo tee -a /etc/lightdm/lightdm.conf <<EOF
+[Seat:*]
+autologin-user=admin
+autologin-session=openbox
+EOF
 
-# Ensure the .desktop file has the correct permissions
-sudo chmod 644 ~/.config/autostart/golf-app.desktop
+mkdir -p ~/.config/openbox
+tee ~/.config/openbox/autostart <<EOF
+#!/bin/bash
+/usr/bin/python3 /home/admin/Golf-APP/main.py &
+EOF
+
+sudo systemctl enable lightdm
+sudo systemctl start lightdm
 
 # Set up permissions at reboot
-echo "@reboot sudo chown admin:admin /dev/ttyAMA0" | sudo crontab -e 
+echo "@reboot sudo chown admin:admin /dev/ttyAMA0" | sudo crontab -e
 
 # Reboot to apply changes
 echo "Setup complete. please Rebooting now..."
