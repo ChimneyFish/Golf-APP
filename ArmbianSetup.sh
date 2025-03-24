@@ -72,6 +72,12 @@ sudo chmod 644 /home/admin/.config/autostart/golf-app.desktop
 echo "@reboot sudo chown admin:admin /dev/ttyS1" | sudo crontab -e 
 
 # Reboot to apply changes
-echo "Setup complete. Please rebooting now..."
+echo "Setup complete...."
 sleep 5
+echo "Setting up touch screen...."
+sleep 5
+chmot +x /home/admin/Golf-APP/Touch.sh
+sudo sh /home/admin/Golf-APP/Touch.sh
+echo "Touch Screen Setup Compleet, rebooting now......."
+sleep 10
 sudo reboot
