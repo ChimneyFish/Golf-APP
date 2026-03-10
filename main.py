@@ -185,6 +185,21 @@ class HomePage(QWidget):
         layout.addStretch(2)
 
         self.setLayout(layout)
+        download_btn = QPushButton("Download Course")
+        download_btn.setFixedHeight(100)
+        download_btn.setFont(QFont("Bookman", 26, QFont.Weight.Bold))
+        download_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #000000;
+                color: #00ff00;
+                border-radius: 25px;
+            }
+            QPushButton:hover {
+                background-color: #222222;
+            }
+        """)
+        download_btn.clicked.connect(lambda: parent.setCurrentIndex(3))
+        layout.addWidget(download_btn)
 
 
 class RangePage(QWidget):
