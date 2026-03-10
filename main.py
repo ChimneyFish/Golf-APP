@@ -4,6 +4,7 @@ import serial
 import pynmea2
 import geopy.distance
 import threading
+import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
@@ -13,6 +14,109 @@ from PyQt5.QtCore import Qt, pyqtSignal
 
 data_file = "courses.json"
 club_data_file = "club_data.json"
+
+class CourseSearchPage(QWidget):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+        layout = QVBoxLayout()
+
+        title = QLabel("Search for Course")
+        title.setFont(QFont("Comic Sans MS", 32, QFont.Weight.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Enter course name")
+        self.search_input.setFont(QFont("Bookman", 16))
+        layout.addWidget(self.search_input)
+
+        search_btn = QPushButton("Search")
+        search_btn.setFont(QFont("Bookman", 18))
+        search_btn.clicked.connect(self.search_course)
+        layout.addWidget(search_btn)
+
+        self.result_label = QLabel("")
+        self.result_label.setFont(QFont("Bookman", 14))
+        layout.addWidget(self.result_label)
+
+        back_btn = QPushButton("Back")
+        back_btn.clicked.connect(lambda: parent.setCurrentIndex(0))
+        layout.addWidget(back_btn)
+
+        self.setLayout(layout)
+
+    def search_course(self):
+        name = self.search_input.text()
+        if not name:
+            self.result_label.setText("Enter a course name")
+            return
+
+        data = fetch_course_from_osm(name)
+
+        if not data["tees"] and not data["greens"]:
+            self.result_label.setText("No course data found")
+            return
+
+        # Auto-generate hole pairings
+        holes = []
+        for i in range(min(len(data["tees"]), len(data["greens"]))):
+            holes.append({
+                "hole_number": i + 1,
+                "tee": data["tees"][i],
+                "green": data["greens"][i]
+            })
+
+        data["holes"] = holes
+
+        # Save to JSON
+        with open("courses.json", "w") as f:
+            json.dump([data], f, indent=4)
+
+        self.result_label.setText(f"Course '{name}' downloaded!")
+
+    def fetch_course_from_osm(course_name):
+        """
+        Searches OpenStreetMap for tee and green nodes for a given golf course.
+        Returns a dict with tee and green coordinates.
+        """
+
+        overpass_url = "https://overpass-api.de/api/interpreter"
+
+        query = f"""
+        [out:json];
+        area["name"="{course_name}"]["leisure"="golf_course"]->.course;
+        (
+          node["golf"="tee"](area.course);
+          node["golf"="green"](area.course);
+        );
+        out center;
+        """
+
+        response = requests.post(overpass_url, data={'data': query})
+        data = response.json()
+
+        tees = []
+        greens = []
+
+        for element in data.get("elements", []):
+            if element["type"] == "node":
+                lat = element["lat"]
+                lon = element["lon"]
+
+                tag = element.get("tags", {}).get("golf")
+                if tag == "tee":
+                    tees.append((lat, lon))
+                elif tag == "green":
+                    greens.append((lat, lon))
+
+        return {
+            "course_name": course_name,
+            "tees": tees,
+            "greens": greens
+        }
+
 
 class HomePage(QWidget):
     def __init__(self, parent):
@@ -795,11 +899,14 @@ if __name__ == "__main__":
     home = HomePage(stack)
     play = GolfRangeFinder()
     range_page = RangePage(stack, club_data_file)
+    search_page = CourseSearchPage(stack)
 
-    stack.addWidget(home)        # index 0
-    stack.addWidget(play)        # index 1
-    stack.addWidget(range_page)  # index 2
+    stack.addWidget(home)         # index 0
+    stack.addWidget(play)         # index 1
+    stack.addWidget(range_page)   # index 2
+    stack.addWidget(search_page)  # index 3
 
     stack.showFullScreen()
     sys.exit(app.exec_())
+
 
