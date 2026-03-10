@@ -89,7 +89,7 @@ class GolfRangeFinder(QWidget):
         self.initUI()
 
     def fetch_external_gps_coordinates(self):
-        port = "/dev/ttyAMA0"
+        port = "/dev/serial0"
     
         while True:
             try:
