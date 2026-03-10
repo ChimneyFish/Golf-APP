@@ -4,7 +4,7 @@ Python Based application To run on Raspberrypi that will act as a Rangefinder, d
 ## Installation
 1. Clone this repository onto your Raspberry Pi
 2. ```cd Golf-APP && Chmod +x setup-rpiOS.sh```
-3. ```sudo sh Setup.sh```
+3. ```sudo sh setup-rpiOS.sh```
 
 # Hardware
  1. Raspberry Pi (doesn't matter which one, Pi's 3 and above are preferred)
