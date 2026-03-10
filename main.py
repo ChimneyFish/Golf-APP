@@ -24,7 +24,7 @@ class HomePage(QWidget):
         palette = QPalette()
         palette.setBrush(
             QPalette.Background,
-            QBrush(QPixmap('/home/admin/Golf-APP/images/golf2.png'))
+            QBrush(QPixmap('/home/admin/Golf-APP/images/golf2.jpg'))
         )
         self.setPalette(palette)
 
