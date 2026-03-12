@@ -40,8 +40,7 @@ sudo apt install -y \
 sudo pip3 install folium geopy requests pynmea2 PyQt5 gpsd-py3 pyserial --break-system-packages
 
 ### --- ENABLE GPSD ---
-sudo systemctl enable gpsd
-sudo systemctl start gpsd
+
 
 ### --- MODIFY /boot/firmware/config.txt ---
 sudo tee -a /boot/firmware/config.txt >/dev/null <<EOF
@@ -68,7 +67,7 @@ sudo usermod -aG dialout admin
 sudo usermod -aG tty admin
 
 ### --- FIX PERMISSIONS AT BOOT ---
-( sudo crontab -l 2>/dev/null; echo "@reboot chown admin:admin /dev/ttyAMA0" ) | sudo crontab -
+( sudo crontab -l 2>/dev/null; echo "@reboot chown admin:admin /dev/serial0" ) | sudo crontab -
 
 ### --- LIGHTDM AUTOLOGIN ---
 sudo tee /etc/lightdm/lightdm.conf >/dev/null <<EOF
