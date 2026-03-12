@@ -27,7 +27,7 @@ fi
 sudo apt update && sudo apt upgrade -y
 sleep 5
 
-sudo apt install -y python3-pip minicom python3-pyqt5 python3-pyqt5.qtwebengine
+sudo apt install -y python3-pip minicom python3-pyqt5 python3-pyqt5.qtwebkit
 sleep 2
 
 sudo pip3 install folium geopy requests pynmea2 PyQt5 pynmea2 pyserial --break-system-packages
