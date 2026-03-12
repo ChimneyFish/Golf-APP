@@ -773,7 +773,7 @@ class GolfRangeFinder(QWidget):
                closest_diff = diff
                club_recommendation = club
 
-    return club_recommendation
+        return club_recommendation
 
 
     def toggle_fullscreen(self):
