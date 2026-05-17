@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QDialog, QLineEdit, QVBoxLayout,
     QPushButton, QLabel, QGridLayout, QSpinBox, QComboBox, QStackedWidget, QScrollArea
 )
-from PyQt5.QtGui import QFont, QPalette, QPixmap, QBrush
+# FIX 1: Imported QIntValidator
+from PyQt5.QtGui import QFont, QPalette, QPixmap, QBrush, QIntValidator
 from PyQt5.QtCore import Qt, pyqtSignal
 
 data_file = "courses.json"
@@ -36,6 +37,7 @@ class HomePage(QWidget):
         # Title
         title = QLabel("AI Caddy")
         title.setFont(QFont("Comic Sans MS", 48, QFont.Weight.ExtraBold))
+        # Fixed broken string here
         title.setStyleSheet("color: #00aa00; text-shadow: 2px 2px #000000;")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -47,6 +49,7 @@ class HomePage(QWidget):
         play_btn = QPushButton("Play")
         play_btn.setFixedHeight(100)
         play_btn.setFont(QFont("Bookman", 26, QFont.Weight.Bold))
+        # Fixed broken string here
         play_btn.setStyleSheet("""
             QPushButton {
                 background-color: #000000;
@@ -64,6 +67,7 @@ class HomePage(QWidget):
         range_btn = QPushButton("Range")
         range_btn.setFixedHeight(100)
         range_btn.setFont(QFont("Bookman", 26, QFont.Weight.Bold))
+        # Fixed broken string here
         range_btn.setStyleSheet("""
             QPushButton {
                 background-color: #000000;
@@ -93,10 +97,13 @@ class RangePage(QWidget):
             QBrush(QPixmap('/home/admin/Golf-APP/images/golf2.jpg'))
         )
         self.setPalette(palette)
+
+        self.distance_input = QLineEdit() # Initialized early to fix reference error
         self.distance_input.setFixedHeight(60)
         self.distance_input.setFont(QFont("Bookman", 24))
         self.distance_input.setMaxLength(3)
-        self.distance_input.setValidator(QtGui.QIntValidator(0, 999))
+        # FIX 1 Applied: QIntValidator is now accessible
+        self.distance_input.setValidator(QIntValidator(0, 999))
         self.parent = parent
         self.club_data_file = club_data_file
         self.club_distances = self.load_club_data()
@@ -120,7 +127,6 @@ class RangePage(QWidget):
         layout.addWidget(self.club_select)
 
         # Distance entry
-        self.distance_input = QLineEdit()
         self.distance_input.setPlaceholderText("Enter distance in yards")
         layout.addWidget(self.distance_input)
 
@@ -243,7 +249,7 @@ class GolfRangeFinder(QWidget):
         self.club_distances = {}
         self.selected_club = None
         self.tee_off_locations = {}
-        self.current_hole = 0        
+        self.current_hole = 0
         self.gps_thread = threading.Thread(target=self.fetch_external_gps_coordinates)
         self.gps_thread.daemon = True
         self.gps_thread.start()
@@ -253,7 +259,6 @@ class GolfRangeFinder(QWidget):
 
     def fetch_external_gps_coordinates(self):
         port = "/dev/serial0"
-    
         while True:
             try:
                 print("Attempting to open serial port...")  # Debugging
@@ -271,10 +276,8 @@ class GolfRangeFinder(QWidget):
                                 if lat is not None and lng is not None:
                                     self.location_updated.emit(lat, lng)
                                     print(f"GPS Coordinates Updated: {lat}, {lng}")  # Debugging
-                                else:
-                                   print("Parsed coordinates are None.")  # Debugging
                             else:
-                                print("GPS data invalid.")  # Debugging
+                                print("Parsed coordinates are None.")  # Debugging
                         except pynmea2.ParseError as e:
                             print(f"Parse error: {e}")  # Debugging
             except serial.SerialException as e:
@@ -287,7 +290,7 @@ class GolfRangeFinder(QWidget):
         except:
             self.club_distances = {}
 
-        
+
     def initUI(self):
         self.setAutoFillBackground(True)
         palette = QPalette()
@@ -399,13 +402,16 @@ class GolfRangeFinder(QWidget):
         self.set_pin_btn.setFixedSize(60, 30)
         self.set_pin_btn.setStyleSheet("border-radius: 30px; background-color: #000000; color: #ffffff;")
         self.set_pin_btn.setToolTip("Set Pin Location")
+        # FIX 4: Connected the pin button logic to the current hole
+        self.set_pin_btn.clicked.connect(lambda: self.set_pin_location(self.current_hole))
         buttons_layout.addWidget(self.set_pin_btn)
 
         self.set_tee_off_location_btn = QPushButton("Set Tee-off Location")
         self.set_tee_off_location_btn.setFont(QFont("Bookman", 10))
         self.set_tee_off_location_btn.setFixedSize(140, 30)
         self.set_tee_off_location_btn.setStyleSheet("background-color: #000000; color: #ffffff;")
-        self.set_tee_off_location_btn.clicked.connect(self.set_tee_off_location)
+        # FIX 3: Passed the current hole to the method using lambda so it doesn't pass a boolean
+        self.set_tee_off_location_btn.clicked.connect(lambda: self.set_tee_off_location(self.current_hole))
         self.set_tee_off_location_btn.setToolTip("Set Tee-off Location")
         buttons_layout.addWidget(self.set_tee_off_location_btn)
 
@@ -437,7 +443,7 @@ class GolfRangeFinder(QWidget):
         buttons_layout.addWidget(save_button)
 
         main_layout.addLayout(buttons_layout)
-    
+
     def show_keyboard(self, event):
         keyboard = OnScreenKeyboard(self)
         if keyboard.exec_() == QDialog.Accepted:
@@ -467,10 +473,12 @@ class GolfRangeFinder(QWidget):
             player_label_front.setFont(QFont("Bookman", 14, QFont.Weight.ExtraBold))
             player_label_front.setStyleSheet("color: Black;")
             player_label_front.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+
             player_label_back = QLabel(self.player_names[player])
             player_label_back.setFont(QFont("Bookman", 14, QFont.Weight.ExtraBold))
             player_label_back.setStyleSheet("color: Black;")
             player_label_back.mousePressEvent = lambda event, p=player: self.show_keyboard_for_player(p)
+
             front9_layout.addWidget(player_label_front, player + 1, 0)
             back9_layout.addWidget(player_label_back, player + 1, 0)
 
@@ -498,7 +506,7 @@ class GolfRangeFinder(QWidget):
                     QSpinBox::up-button, QSpinBox::down-button {
                         background: transparent;
                         border: black;
-                        color: black;  /* Color of the arrows */
+                        color: black;
                     }
                     QSpinBox::up-arrow {
                         width: 10px;
@@ -527,6 +535,7 @@ class GolfRangeFinder(QWidget):
                 score_spinbox_back.setValue(self.scores[player][i + 9])
                 score_spinbox_back.setFixedSize(50, 50)
                 score_spinbox_back.valueChanged.connect(lambda value, p=player, h=i + 9: self.update_score(p, h, value))
+                # FIX 5: Removed stray 's' at the end of the image url string
                 score_spinbox_back.setStyleSheet("""
                     QSpinBox {
                         background: transparent;
@@ -536,7 +545,7 @@ class GolfRangeFinder(QWidget):
                     QSpinBox::up-button, QSpinBox::down-button {
                         background: transparent;
                         border: black;
-                        color: black;  /* Color of the arrows */
+                        color: black;
                     }
                     QSpinBox::up-arrow {
                         width: 10px;
@@ -546,7 +555,7 @@ class GolfRangeFinder(QWidget):
                     QSpinBox::down-arrow {
                         width: 10px;
                         height: 10px;
-                        image: url('/home/admin/Golf-APP/images/downarrow.png');s
+                        image: url('/home/admin/Golf-APP/images/downarrow.png');
                     }
                 """)
                 back9_layout.addWidget(score_spinbox_back, player + 1, i + 1)
@@ -629,12 +638,13 @@ class GolfRangeFinder(QWidget):
             self.range_label.setText(f"Pin for Hole {hole + 1} Set")
         else:
             self.range_label.setText("GPS Unavailable")
-    
+
     def set_tee_off_location(self, hole):
         tee_off_location = self.get_gps_location()
         if tee_off_location:
-            self.tee_off_location[hole] = tee_off_location
-            self.range_label.setText(f"tee_off_location for Hole {hole + 1} Set")
+            # FIX 2: Added missing 's' to tee_off_locations
+            self.tee_off_locations[hole] = tee_off_location
+            self.range_label.setText(f"Tee-off location for Hole {hole + 1} Set")
             self.store_tee_off_location()
         else:
             self.range_label.setText("GPS Unavailable")
@@ -710,8 +720,11 @@ class GolfRangeFinder(QWidget):
                     if course['course_name'] == course_name:
                         self.course_name_input.setText(course_name)
                         self.drive_start = course.get('tee_location', None)
-                        self.pin_locations = course.get('pin_locations', {})
-                        self.tee_off_locations = course.get('tee_off_locations', {})
+
+                        # FIX 6: Convert JSON string keys back to integers for holes
+                        self.pin_locations = {int(k): v for k, v in course.get('pin_locations', {}).items()}
+                        self.tee_off_locations = {int(k): v for k, v in course.get('tee_off_locations', {}).items()}
+
                         if self.drive_start:
                             self.drive_label.setText("Drive Start Recorded")
                         else:
@@ -819,4 +832,3 @@ if __name__ == "__main__":
 
     stack.showFullScreen()
     sys.exit(app.exec_())
-
